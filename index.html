@@ -167,4 +167,358 @@
 
         <!-- Sinkronisasi ke Google Sheets -->
         <div class="text-center fade-in">
-            <button onclick="syncToSheets()" class="w-full py-3 text-sm font-medium text
+            <button onclick="syncToSheets()" class="w-full py-3 text-sm font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors">
+                <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Sinkronisasi ke Google Sheets
+            </button>
+            <p id="sync-status" class="text-xs mt-2 font-medium hidden">Menyinkronkan...</p>
+        </div>
+
+        <!-- Riwayat Transaksi -->
+        <div class="space-y-3 pt-2" id="history-list"></div>
+    </div>
+
+    <script>
+        const GOOGLE_APP_SCRIPT_URL = "URL_APPS_SCRIPT_ANDA_DISINI";
+
+        let currentTab = 'Pribadi';
+        let jenisTx = 'Pengeluaran';
+        let dataTransaksi = JSON.parse(localStorage.getItem('mulaeKasData')) || [];
+        let base64FotoAktif = null;
+        let editId = null;
+        let currentLocationStr = null;
+
+        // Kategori Dinamis
+        let categories = JSON.parse(localStorage.getItem('mulaeCats')) || {
+            Pribadi: ['Makan', 'Bensin', 'Topup', 'Tagihan'],
+            Bisnis: ['Sewa Alat', 'Transport', 'Honor', 'DP Klien']
+        };
+
+        function setWaktuSekarang() {
+            const now = new Date();
+            // Menyesuaikan zona waktu lokal agar format ISO string sesuai dengan jam saat ini
+            const tzOffset = now.getTimezoneOffset() * 60000;
+            const localISOTime = (new Date(now - tzOffset)).toISOString().slice(0, 16);
+            document.getElementById('input-waktu').value = localISOTime;
+        }
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('btn-pribadi').className = tab === 'Pribadi' ? "flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-active" : "flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-inactive";
+            document.getElementById('btn-bisnis').className = tab === 'Bisnis' ? "flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-active" : "flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-inactive";
+            
+            document.getElementById('panel-laba-rugi').classList.toggle('hidden', tab !== 'Bisnis');
+            renderChips();
+            kalkulasiDanRender();
+        }
+
+        function setJenis(jenis) {
+            jenisTx = jenis;
+            document.getElementById('btn-keluar').className = jenis === 'Pengeluaran' ? "flex-1 py-2 text-xs font-semibold rounded-lg transition-all tab-active text-rose-600 dark:text-rose-400" : "flex-1 py-2 text-xs font-semibold rounded-lg transition-all tab-inactive";
+            document.getElementById('btn-masuk').className = jenis === 'Pemasukan' ? "flex-1 py-2 text-xs font-semibold rounded-lg transition-all tab-active text-emerald-600 dark:text-emerald-400" : "flex-1 py-2 text-xs font-semibold rounded-lg transition-all tab-inactive";
+            document.getElementById('btn-hutang').className = jenis === 'Hutang' ? "flex-1 py-2 text-xs font-semibold rounded-lg transition-all tab-active text-amber-600 dark:text-amber-400" : "flex-1 py-2 text-xs font-semibold rounded-lg transition-all tab-inactive";
+        }
+
+        function renderChips() {
+            const container = document.getElementById('chips-container');
+            let html = categories[currentTab].map(cat => 
+                `<button onclick="document.getElementById('input-keterangan').value = '${cat}'" class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-100 hover:text-indigo-600 transition-colors">${cat}</button>`
+            ).join('');
+            html += `<button onclick="tambahKategori()" class="px-3 py-1.5 rounded-full border border-dashed border-indigo-500 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"><i class="fa-solid fa-plus"></i></button>`;
+            container.innerHTML = html;
+        }
+
+        function tambahKategori() {
+            const baru = prompt("Masukkan nama kategori cepat baru:");
+            if(baru && baru.trim() !== "") {
+                categories[currentTab].push(baru.trim());
+                localStorage.setItem('mulaeCats', JSON.stringify(categories));
+                renderChips();
+            }
+        }
+
+        function formatRupiah(angka) {
+            return new Intl.NumberFormat('id-ID').format(angka);
+        }
+
+        function mintaLokasi() {
+            if(navigator.geolocation) {
+                document.getElementById('lokasi-status').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mencari...';
+                navigator.geolocation.getCurrentPosition(pos => {
+                    currentLocationStr = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
+                    document.getElementById('lokasi-status').innerHTML = '<i class="fa-solid fa-location-dot text-emerald-500"></i> Lokasi Tersimpan';
+                }, () => {
+                    document.getElementById('lokasi-status').innerHTML = '<i class="fa-solid fa-circle-exclamation text-rose-500"></i> Akses Ditolak';
+                });
+            }
+        }
+
+        function previewAndCompressFoto(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = function() {
+                    const MAX_WIDTH = 800; const MAX_HEIGHT = 800;
+                    let width = img.width; let height = img.height;
+                    if (width > height && width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } 
+                    else if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    base64FotoAktif = canvas.toDataURL('image/jpeg', 0.7);
+                    document.getElementById('foto-preview').src = base64FotoAktif;
+                    document.getElementById('foto-preview-container').classList.remove('hidden');
+                }
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function hapusFoto() {
+            base64FotoAktif = null;
+            document.getElementById('input-foto').value = '';
+            document.getElementById('foto-preview-container').classList.add('hidden');
+        }
+
+        function simpanTransaksi() {
+            const nominal = parseInt(document.getElementById('input-nominal').value);
+            const keterangan = document.getElementById('input-keterangan').value;
+            const inputWaktu = document.getElementById('input-waktu').value;
+            
+            if(!nominal || !keterangan) return alert('Mohon isi nominal dan keterangan.');
+
+            // Mengambil jam & tanggal dari form input, bukan hanya dari sistem
+            const dateObj = inputWaktu ? new Date(inputWaktu) : new Date();
+            
+            const bulanStr = dateObj.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+            const tanggalStr = dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            const waktuStr = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+            if (editId) {
+                const idx = dataTransaksi.findIndex(t => t.id === editId);
+                if(idx !== -1) {
+                    dataTransaksi[idx].nominal = nominal;
+                    dataTransaksi[idx].keterangan = keterangan;
+                    dataTransaksi[idx].jenis = jenisTx;
+                    
+                    dataTransaksi[idx].tanggal = tanggalStr;
+                    dataTransaksi[idx].waktu = waktuStr;
+                    dataTransaksi[idx].bulan = bulanStr;
+                    dataTransaksi[idx].isoWaktu = inputWaktu;
+
+                    if(base64FotoAktif) dataTransaksi[idx].foto = base64FotoAktif;
+                    if(currentLocationStr) dataTransaksi[idx].lokasi = currentLocationStr;
+                    dataTransaksi[idx].syncStatus = false;
+                }
+            } else {
+                const newTx = {
+                    id: Date.now(), 
+                    tanggal: tanggalStr, 
+                    waktu: waktuStr, 
+                    bulan: bulanStr,
+                    isoWaktu: inputWaktu,
+                    entitas: currentTab, 
+                    jenis: jenisTx, 
+                    nominal: nominal, 
+                    keterangan: keterangan,
+                    foto: base64FotoAktif, 
+                    lokasi: currentLocationStr, 
+                    syncStatus: false, 
+                    isLunas: false
+                };
+                dataTransaksi.unshift(newTx);
+            }
+
+            try {
+                localStorage.setItem('mulaeKasData', JSON.stringify(dataTransaksi));
+            } catch (e) {
+                alert("Memori Browser penuh. Mohon hapus foto pada transaksi lama.");
+                if(!editId) dataTransaksi.shift();
+                return;
+            }
+            
+            batalEdit();
+            kalkulasiDanRender();
+        }
+
+        function editTx(id) {
+            const tx = dataTransaksi.find(t => t.id === id);
+            if(tx) {
+                document.getElementById('input-nominal').value = tx.nominal;
+                document.getElementById('input-keterangan').value = tx.keterangan;
+                setJenis(tx.jenis);
+                editId = id;
+                document.getElementById('btn-batal').classList.remove('hidden');
+                document.getElementById('btn-simpan').innerText = "Perbarui Transaksi";
+                
+                // Isi kembali form jam sesuai data yang diedit
+                if(tx.isoWaktu) {
+                    document.getElementById('input-waktu').value = tx.isoWaktu;
+                }
+
+                if(tx.foto) {
+                    base64FotoAktif = tx.foto;
+                    document.getElementById('foto-preview').src = base64FotoAktif;
+                    document.getElementById('foto-preview-container').classList.remove('hidden');
+                }
+                document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function batalEdit() {
+            editId = null;
+            document.getElementById('input-nominal').value = '';
+            document.getElementById('input-keterangan').value = '';
+            document.getElementById('btn-batal').classList.add('hidden');
+            document.getElementById('btn-simpan').innerText = "Simpan Transaksi";
+            hapusFoto();
+            setJenis('Pengeluaran');
+            setWaktuSekarang(); // Reset form jam ke waktu saat ini
+        }
+
+        function hapusTx(id) {
+            if(confirm("Yakin ingin menghapus data ini?")) {
+                dataTransaksi = dataTransaksi.filter(t => t.id !== id);
+                localStorage.setItem('mulaeKasData', JSON.stringify(dataTransaksi));
+                kalkulasiDanRender();
+            }
+        }
+
+        function tandaiLunas(id) {
+            const idx = dataTransaksi.findIndex(t => t.id === id);
+            if(idx !== -1 && confirm("Tandai hutang ini sebagai Lunas?\n(Ini akan otomatis memotong saldo sebagai Pengeluaran)")) {
+                dataTransaksi[idx].isLunas = true;
+                
+                // Otomatis mencatat pengeluaran uang untuk pelunasan
+                const dateObj = new Date();
+                const newTx = {
+                    id: Date.now(), 
+                    tanggal: dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }), 
+                    waktu: dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), 
+                    bulan: dateObj.toLocaleString('id-ID', { month: 'long', year: 'numeric' }),
+                    isoWaktu: (new Date(dateObj - dateObj.getTimezoneOffset() * 60000)).toISOString().slice(0, 16),
+                    entitas: dataTransaksi[idx].entitas, 
+                    jenis: 'Pengeluaran', 
+                    nominal: dataTransaksi[idx].nominal, 
+                    keterangan: "Pelunasan Hutang: " + dataTransaksi[idx].keterangan,
+                    foto: null, lokasi: null, syncStatus: false, isLunas: false
+                };
+                dataTransaksi.unshift(newTx);
+                localStorage.setItem('mulaeKasData', JSON.stringify(dataTransaksi));
+                kalkulasiDanRender();
+            }
+        }
+
+        function kalkulasiDanRender() {
+            const bulanBerjalan = new Date().toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+            document.getElementById('current-month-label').innerText = bulanBerjalan;
+
+            const listContainer = document.getElementById('history-list');
+            listContainer.innerHTML = '';
+            
+            let totalMasuk = 0; let totalKeluar = 0; let totalHutang = 0;
+            const dataBulanIni = dataTransaksi.filter(t => t.entitas === currentTab && t.bulan === bulanBerjalan);
+
+            dataBulanIni.forEach((t, index) => {
+                let iconColor, iconPath, nominalColor, prefix;
+                
+                if(t.jenis === 'Pemasukan') {
+                    totalMasuk += t.nominal;
+                    iconColor = 'text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30'; iconPath = 'fa-arrow-down'; nominalColor = 'text-emerald-600 dark:text-emerald-400'; prefix = '+';
+                } else if(t.jenis === 'Pengeluaran') {
+                    totalKeluar += t.nominal;
+                    iconColor = 'text-rose-500 bg-rose-100 dark:bg-rose-900/30'; iconPath = 'fa-arrow-up'; nominalColor = 'text-slate-800 dark:text-slate-200'; prefix = '-';
+                } else { // Hutang
+                    if(!t.isLunas) totalHutang += t.nominal;
+                    iconColor = 'text-amber-500 bg-amber-100 dark:bg-amber-900/30'; iconPath = 'fa-hand-holding-dollar'; 
+                    nominalColor = t.isLunas ? 'text-slate-400 line-through' : 'text-amber-600 dark:text-amber-400'; prefix = '';
+                }
+
+                const delay = index < 5 ? `style="animation-delay: ${index * 0.05}s"` : '';
+                const fotoHtml = t.foto ? `<img src="${t.foto}" class="mt-2 w-14 h-14 object-cover rounded border border-slate-200 shadow-sm cursor-pointer hover:scale-150 origin-left transition-transform">` : '';
+                const locHtml = t.lokasi ? `<a href="${t.lokasi}" target="_blank" class="text-indigo-500 ml-2 hover:underline"><i class="fa-solid fa-map-pin"></i></a>` : '';
+                
+                let lunasBtn = (t.jenis === 'Hutang' && !t.isLunas) ? `<button onclick="tandaiLunas(${t.id})" class="text-[10px] bg-amber-500 text-white px-2 py-1 rounded hover:bg-amber-600">LUNAS</button>` : '';
+                if(t.isLunas) lunasBtn = `<span class="text-[10px] bg-slate-200 text-slate-500 px-2 py-1 rounded">LUNAS</span>`;
+
+                listContainer.innerHTML += `
+                    <div class="glass-card p-4 flex gap-3 items-start fade-in" ${delay}>
+                        <div class="p-2 rounded-full flex-shrink-0 ${iconColor} mt-1"><i class="fa-solid ${iconPath} text-xs"></i></div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">${t.keterangan}</p>
+                            <p class="text-[11px] text-slate-500 mt-0.5">${t.tanggal} • ${t.waktu} ${locHtml}</p>
+                            ${fotoHtml}
+                            <div class="flex gap-2 mt-2">
+                                ${lunasBtn}
+                                <button onclick="editTx(${t.id})" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="hapusTx(${t.id})" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-rose-500 px-2 py-1 rounded"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <div class="font-bold text-sm whitespace-nowrap ${nominalColor}">${prefix}Rp${formatRupiah(t.nominal)}</div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('total-masuk').innerText = 'Rp' + formatRupiah(totalMasuk);
+            document.getElementById('total-keluar').innerText = 'Rp' + formatRupiah(totalKeluar);
+            document.getElementById('sisa-saldo').innerText = 'Rp' + formatRupiah(totalMasuk - totalKeluar);
+            document.getElementById('total-hutang').innerText = 'Rp' + formatRupiah(totalHutang);
+
+            if (currentTab === 'Bisnis') {
+                const labaBersih = totalMasuk - totalKeluar;
+                document.getElementById('lr-revenue').innerText = 'Rp' + formatRupiah(totalMasuk);
+                document.getElementById('lr-beban').innerText = "- Rp" + formatRupiah(totalKeluar);
+                document.getElementById('lr-profit').innerText = 'Rp' + formatRupiah(labaBersih);
+                document.getElementById('lr-profit').className = labaBersih < 0 ? "text-base font-bold text-rose-600" : "text-base font-bold text-emerald-600";
+            }
+        }
+
+        async function syncToSheets() {
+            const unsynced = dataTransaksi.filter(t => !t.syncStatus);
+            if (unsynced.length === 0) return alert("Semua data sudah tersinkronisasi ke Sheets.");
+            const status = document.getElementById('sync-status');
+            status.classList.remove('hidden');
+            status.className = "text-xs mt-2 font-medium text-indigo-500 block";
+            status.innerText = "Mengirim " + unsynced.length + " data...";
+
+            if(GOOGLE_APP_SCRIPT_URL === "URL_APPS_SCRIPT_ANDA_DISINI") return alert("URL Google Apps Script belum dimasukkan.");
+
+            try {
+                const safePayload = unsynced.map(t => ({
+                    ...t,
+                    foto: t.foto ? "Ada Lampiran" : "Tidak Ada",
+                    lokasi: t.lokasi || "Tidak Ada Lokasi",
+                    statusHutang: t.jenis === 'Hutang' ? (t.isLunas ? 'Lunas' : 'Belum Lunas') : '-'
+                }));
+
+                const response = await fetch(GOOGLE_APP_SCRIPT_URL, {
+                    method: 'POST', body: JSON.stringify(safePayload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+                
+                if (response.ok) {
+                    dataTransaksi = dataTransaksi.map(t => ({ ...t, syncStatus: true }));
+                    localStorage.setItem('mulaeKasData', JSON.stringify(dataTransaksi));
+                    status.className = "text-xs mt-2 font-medium text-emerald-500 block";
+                    status.innerText = "Selesai menyinkronkan!";
+                    setTimeout(() => status.classList.add('hidden'), 2500);
+                }
+            } catch (error) {
+                status.className = "text-xs mt-2 font-medium text-rose-500 block";
+                status.innerText = "Error koneksi internet.";
+            }
+        }
+
+        // Init Setup
+        renderChips();
+        setWaktuSekarang(); // Menjalankan fungsi jam otomatis saat web dibuka
+        switchTab('Pribadi');
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
+    </script>
+</body>
+</html>
