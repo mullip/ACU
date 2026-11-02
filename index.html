@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kas Mulae.Production</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f3f4f6;
+            background-image: radial-gradient(#9ca3af 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: #111827;
+        }
+        .dark body {
+            background-color: #111827;
+            background-image: radial-gradient(#4b5563 1px, transparent 1px);
+            color: #f9fafb;
+        }
+        .monochrome-card {
+            background-color: #ffffff;
+            border: 2px solid #000000;
+            box-shadow: 6px 6px 0px #000000;
+            border-radius: 8px;
+            transition: all 0.2s ease-in-out;
+        }
+        .dark .monochrome-card {
+            background-color: #1f2937;
+            border: 2px solid #ffffff;
+            box-shadow: 6px 6px 0px #ffffff;
+        }
+        .monochrome-card:active {
+            transform: translate(4px, 4px);
+            box-shadow: 2px 2px 0px #000000;
+        }
+        .dark .monochrome-card:active {
+            box-shadow: 2px 2px 0px #ffffff;
+        }
+        .animate-pop { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes pop {
+            0% { opacity: 0; transform: translateY(20px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 transition-colors duration-500 font-mono pb-24">
+    <div class="max-w-lg mx-auto space-y-6">
+        
+        <!-- Header & Toggle -->
+        <div class="flex justify-between items-center mb-2">
+            <h1 class="text-2xl font-bold uppercase tracking-tighter"><i class="fa-solid fa-wallet mr-2"></i>Buku Kas</h1>
+            <button onclick="toggleTheme()" class="monochrome-card p-2 px-3 text-sm font-bold">
+                <i class="fa-solid fa-moon"></i> Mode
+            </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <button onclick="switchTab('Pribadi')" id="btn-pribadi" class="monochrome-card py-3 font-bold text-lg">Pribadi</button>
+            <button onclick="switchTab('Bisnis')" id="btn-bisnis" class="monochrome-card py-3 font-bold text-lg opacity-50">Mulae.Production</button>
+        </div>
+
+        <!-- Dashboard Rekapitulasi -->
+        <div class="monochrome-card p-5 space-y-4 animate-pop delay-100">
+            <div>
+                <p class="text-sm font-bold uppercase mb-1">Bulan: <span id="current-month-label"></span></p>
+                <h2 class="text-4xl font-black" id="sisa-saldo">Rp0</h2>
+                <p class="text-xs uppercase mt-1">Sisa Saldo Real-Time</p>
+            </div>
+            <div class="flex justify-between border-t-2 border-current pt-4">
+                <div>
+                    <p class="text-xs uppercase font-bold"><i class="fa-solid fa-arrow-down text-green-500"></i> Masuk</p>
+                    <p class="font-bold" id="total-masuk">Rp0</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs uppercase font-bold"><i class="fa-solid fa-arrow-up text-red-500"></i> Keluar</p>
+                    <p class="font-bold" id="total-keluar">Rp0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Input -->
+        <div class="monochrome-card p-5 animate-pop delay-200">
+            <div class="flex gap-2 mb-4">
+                <button onclick="setJenis('Pengeluaran')" id="btn-keluar" class="flex-1 border-2 border-current py-2 font-bold bg-black text-white dark:bg-white dark:text-black">Pengeluaran</button>
+                <button onclick="setJenis('Pemasukan')" id="btn-masuk" class="flex-1 border-2 border-current py-2 font-bold opacity-50">Pemasukan</button>
+            </div>
+
+            <div class="space-y-3">
+                <input type="number" id="input-nominal" placeholder="Nominal (Cth: 50000)" class="w-full border-2 border-current bg-transparent p-3 font-bold outline-none placeholder-gray-500 focus:ring-2 ring-current">
+                
+                <!-- Smart Chips Kategori -->
+                <div id="chips-container" class="flex flex-wrap gap-2 text-xs font-bold uppercase">
+                    <!-- Chips di-render JS -->
+                </div>
+
+                <input type="text" id="input-keterangan" placeholder="Keterangan singkat..." class="w-full border-2 border-current bg-transparent p-3 font-bold outline-none placeholder-gray-500 focus:ring-2 ring-current">
+                
+                <button onclick="simpanTransaksi()" class="w-full monochrome-card py-3 font-black text-lg bg-black text-white dark:bg-white dark:text-black uppercase tracking-widest mt-2">
+                    <i class="fa-solid fa-bolt"></i> Catat!
+                </button>
+            </div>
+        </div>
+
+        <!-- Sinkronisasi ke Google Sheets -->
+        <div class="text-center animate-pop delay-300">
+            <button onclick="syncToSheets()" class="monochrome-card p-3 w-full font-bold uppercase text-sm">
+                <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Sinkronisasi ke Google Sheets
+            </button>
+            <p id="sync-status" class="text-xs mt-2 font-bold hidden">Menyinkronkan...</p>
+        </div>
+
+        <!-- Riwayat Transaksi -->
+        <div class="space-y-3" id="history-list">
+            <!-- Data di-render JS -->
+        </div>
+    </div>
+
+    <script>
+        // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI BAWAH INI SETELAH DEPLOY
+        const GOOGLE_APP_SCRIPT_URL = "URL_APPS_SCRIPT_ANDA_DISINI";
+
+        let currentTab = 'Pribadi';
+        let jenisTx = 'Pengeluaran';
+        let dataTransaksi = JSON.parse(localStorage.getItem('mulaeKasData')) || [];
+        
+        const categories = {
+            Pribadi: ['Makan', 'Bensin', 'Nongkrong', 'Tagihan', 'Gaji Masuk'],
+            Bisnis: ['Sewa Alat', 'Transport Job', 'Honor Crew', 'DP Klien', 'Pelunasan']
+        };
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('btn-pribadi').classList.toggle('opacity-50', tab !== 'Pribadi');
+            document.getElementById('btn-bisnis').classList.toggle('opacity-50', tab !== 'Bisnis');
+            renderChips();
+            kalkulasiDanRender();
+        }
+
+        function setJenis(jenis) {
+            jenisTx = jenis;
+            document.getElementById('btn-keluar').classList.toggle('opacity-50', jenis !== 'Pengeluaran');
+            document.getElementById('btn-masuk').classList.toggle('opacity-50', jenis !== 'Pemasukan');
+            
+            // Logika warna monokrom aktif
+            document.getElementById('btn-keluar').className = jenis === 'Pengeluaran' ? "flex-1 border-2 border-current py-2 font-bold bg-black text-white dark:bg-white dark:text-black" : "flex-1 border-2 border-current py-2 font-bold opacity-50";
+            document.getElementById('btn-masuk').className = jenis === 'Pemasukan' ? "flex-1 border-2 border-current py-2 font-bold bg-black text-white dark:bg-white dark:text-black" : "flex-1 border-2 border-current py-2 font-bold opacity-50";
+        }
+
+        function renderChips() {
+            const container = document.getElementById('chips-container');
+            container.innerHTML = categories[currentTab].map(cat => 
+                `<button onclick="document.getElementById('input-keterangan').value = '${cat}'" class="border-2 border-current px-2 py-1 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors">${cat}</button>`
+            ).join('');
+        }
+
+        function formatRupiah(angka) {
+            return "Rp" + angka.toLocaleString('id-ID');
+        }
+
+        function simpanTransaksi() {
+            const nominal = parseInt(document.getElementById('input-nominal').value);
+            const keterangan = document.getElementById('input-keterangan').value;
+            
+            if(!nominal || !keterangan) return alert('Isi nominal dan keterangan!');
+
+            const dateObj = new Date();
+            const bulanStr = dateObj.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+            const tanggalStr = dateObj.toLocaleDateString('id-ID');
+
+            const newTx = {
+                id: Date.now(),
+                tanggal: tanggalStr,
+                bulan: bulanStr,
+                entitas: currentTab,
+                jenis: jenisTx,
+                nominal: nominal,
+                keterangan: keterangan,
+                syncStatus: false
+            };
+
+            dataTransaksi.unshift(newTx);
+            localStorage.setItem('mulaeKasData', JSON.stringify(dataTransaksi));
+            
+            document.getElementById('input-nominal').value = '';
+            document.getElementById('input-keterangan').value = '';
+            
+            kalkulasiDanRender();
+        }
+
+        function kalkulasiDanRender() {
+            const bulanBerjalan = new Date().toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+            document.getElementById('current-month-label').innerText = bulanBerjalan;
+
+            const listContainer = document.getElementById('history-list');
+            listContainer.innerHTML = '';
+            
+            let totalMasuk = 0;
+            let totalKeluar = 0;
+
+            const dataBulanIni = dataTransaksi.filter(t => t.entitas === currentTab && t.bulan === bulanBerjalan);
+
+            dataBulanIni.forEach((t, index) => {
+                if(t.jenis === 'Pemasukan') totalMasuk += t.nominal;
+                else totalKeluar += t.nominal;
+
+                const icon = t.jenis === 'Pemasukan' ? '<i class="fa-solid fa-arrow-down text-green-500"></i>' : '<i class="fa-solid fa-arrow-up text-red-500"></i>';
+                const delay = index < 5 ? `style="animation-delay: ${index * 0.1}s"` : '';
+
+                listContainer.innerHTML += `
+                    <div class="monochrome-card p-4 flex justify-between items-center animate-pop" ${delay}>
+                        <div>
+                            <p class="font-bold">${t.keterangan}</p>
+                            <p class="text-xs uppercase">${icon} ${t.tanggal}</p>
+                        </div>
+                        <div class="font-black text-lg">
+                            ${t.jenis === 'Pemasukan' ? '+' : '-'}${formatRupiah(t.nominal)}
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('total-masuk').innerText = formatRupiah(totalMasuk);
+            document.getElementById('total-keluar').innerText = formatRupiah(totalKeluar);
+            document.getElementById('sisa-saldo').innerText = formatRupiah(totalMasuk - totalKeluar);
+        }
+
+        async function syncToSheets() {
+            const unsynced = dataTransaksi.filter(t => !t.syncStatus);
+            if (unsynced.length === 0) {
+                alert("Semua data sudah tersinkronisasi ke Sheets!");
+                return;
+            }
+
+            const status = document.getElementById('sync-status');
+            status.classList.remove('hidden');
+            status.innerText = "Mengirim " + unsynced.length + " data...";
+
+            if(GOOGLE_APP_SCRIPT_URL === "URL_APPS_SCRIPT_ANDA_DISINI") {
+                alert("Anda belum memasukkan URL Google Apps Script di dalam kode!");
+                status.classList.add('hidden');
+                return;
+            }
+
+            try {
+                const response = await fetch(GOOGLE_APP_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(unsynced),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+                
+                if (response.ok) {
+                    // Tandai sudah sync
+                    dataTransaksi = dataTransaksi.map(t => ({ ...t, syncStatus: true }));
+                    localStorage.setItem('mulaeKasData', JSON.stringify(dataTransaksi));
+                    status.innerText = "Berhasil tersinkronisasi!";
+                    setTimeout(() => status.classList.add('hidden'), 2000);
+                } else {
+                    status.innerText = "Gagal menyinkronkan.";
+                }
+            } catch (error) {
+                status.innerText = "Error koneksi ke Google Sheets.";
+            }
+        }
+
+        // Init
+        renderChips();
+        kalkulasiDanRender();
+    </script>
+</body>
+</html>
