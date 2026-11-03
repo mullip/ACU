@@ -50,7 +50,6 @@
     <div id="auth-overlay" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="glass-card w-full max-w-sm p-6 space-y-4 text-center">
             
-            <!-- Logo Mulae.Production (SVG Embedded) -->
             <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-950 p-2 shadow-lg flex items-center justify-center border border-emerald-600/30">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-full h-full">
                     <path d="M100 380V130h50l80 135 80-135h50v250h-50V210l-80 135-80-135v170z" fill="#ffffff"/>
@@ -63,7 +62,6 @@
             <h2 class="text-lg font-bold text-slate-900 dark:text-white">Buku Kas Mulae</h2>
             <p class="text-xs text-slate-500">Silakan login untuk membuka server data terproteksi</p>
             
-            <!-- Tombol 1-Klik Login Google -->
             <button onclick="handleGoogleLogin()" class="w-full flex items-center justify-center gap-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl py-3 text-xs font-bold shadow-sm transition-all">
                 <svg class="w-4 h-4" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -118,179 +116,232 @@
         </div>
     </div>
 
-    <!-- MAIN APPLICATION CONTENT -->
-    <div class="max-w-md mx-auto space-y-5 pt-6 px-4">
-        <div class="flex justify-between items-center mb-2">
-            <div class="flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-lg bg-emerald-950 p-1 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-full h-full">
-                        <path d="M100 380V130h50l80 135 80-135h50v250h-50V210l-80 135-80-135v170z" fill="#ffffff"/>
-                        <rect x="340" y="260" width="32" height="120" rx="6" fill="#34d399"/>
-                        <rect x="290" y="290" width="32" height="90" rx="6" fill="#10b981"/>
-                        <rect x="240" y="330" width="32" height="50" rx="6" fill="#059669"/>
-                    </svg>
-                </div>
-                <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Buku Kas</h1>
-            </div>
+    <!-- CONTAINER UTAMA (RESPONSIVE DESKTOP MACBOOK LAYOUT) -->
+    <div class="max-w-md lg:max-w-6xl mx-auto pt-6 px-4">
+        
+        <!-- GRID DUA KOLOM UNTUK DESKTOP / MACBOOK -->
+        <div class="lg:grid lg:grid-cols-12 lg:gap-6 space-y-5 lg:space-y-0">
             
-            <div class="flex items-center gap-2">
-                <button onclick="togglePrivacyMode()" title="Mode Privasi Nominal" class="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-colors">
-                    <i id="privacy-icon" class="fa-solid fa-eye text-sm"></i>
-                </button>
-                <button onclick="setupPinModal()" title="Setel PIN Keamanan" class="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-colors">
-                    <i class="fa-solid fa-key text-sm"></i>
-                </button>
-                <button onclick="handleLogout()" title="Logout Akun" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-100 hover:text-rose-600 transition-colors">
-                    <i class="fa-solid fa-right-from-bracket mr-1"></i>Keluar
-                </button>
-                <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
-                    <i class="fa-solid fa-circle-half-stroke text-lg"></i>
-                </button>
-            </div>
-        </div>
-
-        <div class="segmented-control flex gap-1">
-            <button onclick="switchTab('Pribadi')" id="btn-pribadi" class="flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-active">Pribadi</button>
-            <button onclick="switchTab('Bisnis')" id="btn-bisnis" class="flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-inactive">Mulae.Production</button>
-        </div>
-
-        <div class="glass-card p-5 fade-in">
-            <div class="flex justify-between items-start mb-4">
-                <div>
-                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Total Saldo Kas</p>
-                    <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight" id="sisa-saldo">Rp0</h2>
-                </div>
-                <div class="text-right bg-amber-50 dark:bg-amber-950/40 p-2 px-3 rounded-xl border border-amber-200/80 dark:border-amber-800/50">
-                    <p class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-0.5">Hutang Aktif</p>
-                    <p class="font-bold text-sm text-amber-700 dark:text-amber-300" id="total-hutang">Rp0</p>
-                </div>
-            </div>
-            
-            <div class="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-3 mt-1">
-                <div>
-                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5"><i class="fa-solid fa-arrow-down-long text-emerald-500 mr-1"></i> Total Masuk</p>
-                    <p class="font-bold text-emerald-600 dark:text-emerald-400 text-sm" id="total-masuk">Rp0</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5"><i class="fa-solid fa-arrow-up-long text-rose-500 mr-1"></i> Total Keluar</p>
-                    <p class="font-bold text-rose-600 dark:text-rose-400 text-sm" id="total-keluar">Rp0</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="glass-card p-5 fade-in" id="form-section">
-            <div class="segmented-control flex gap-1 mb-3">
-                <button onclick="setJenis('Pengeluaran')" id="btn-keluar" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-active text-rose-600">Pengeluaran</button>
-                <button onclick="setJenis('Pemasukan')" id="btn-masuk" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-inactive">Pemasukan</button>
-                <button onclick="setJenis('Hutang')" id="btn-hutang" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-inactive">Catat Hutang</button>
-            </div>
-
-            <div id="panel-sifat" class="flex gap-2 mb-4">
-                <button onclick="setSifat('Produktif')" id="btn-produktif" class="flex-1 py-1.5 text-xs font-semibold rounded-lg border-2 border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 transition-all">💡 Produktif</button>
-                <button onclick="setSifat('Self-Reward')" id="btn-selfreward" class="flex-1 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-400 hover:text-fuchsia-600 transition-all">🎉 Self-Reward</button>
-            </div>
-
-            <div class="space-y-3.5">
-                <div class="relative">
-                    <span class="absolute left-3.5 top-3 text-slate-400 text-sm"><i class="fa-solid fa-clock"></i></span>
-                    <input type="datetime-local" id="input-waktu" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 pl-10 pr-3 font-semibold text-xs outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow text-slate-700 dark:text-slate-200">
-                </div>
-
-                <div class="relative">
-                    <span class="absolute left-3.5 top-3 text-slate-400 font-bold text-sm">Rp</span>
-                    <input type="number" id="input-nominal" placeholder="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 pl-10 pr-3 font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow">
-                </div>
+            <!-- KOLOM KIRI (HEADER, INPUT FORM, DASHBOARD SALDO) -->
+            <div class="lg:col-span-5 space-y-5">
                 
-                <div>
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Pilihan Cepat (<span id="label-jenis-chip">Pengeluaran</span>)</span>
-                        <button onclick="toggleManageChips()" class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
-                            <i class="fa-solid fa-pen-to-square"></i> Kelola
+                <!-- Header Top Bar -->
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-950 p-1.5 flex items-center justify-center shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-full h-full">
+                                <path d="M100 380V130h50l80 135 80-135h50v250h-50V210l-80 135-80-135v170z" fill="#ffffff"/>
+                                <rect x="340" y="260" width="32" height="120" rx="6" fill="#34d399"/>
+                                <rect x="290" y="290" width="32" height="90" rx="6" fill="#10b981"/>
+                                <rect x="240" y="330" width="32" height="50" rx="6" fill="#059669"/>
+                            </svg>
+                        </div>
+                        <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Buku Kas</h1>
+                    </div>
+                    
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="togglePrivacyMode()" title="Mode Privasi Nominal" class="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-colors">
+                            <i id="privacy-icon" class="fa-solid fa-eye text-sm"></i>
+                        </button>
+                        <button onclick="setupPinModal()" title="Setel PIN Keamanan" class="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-colors">
+                            <i class="fa-solid fa-key text-sm"></i>
+                        </button>
+                        <button onclick="handleLogout()" title="Logout Akun" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-100 hover:text-rose-600 transition-colors">
+                            <i class="fa-solid fa-right-from-bracket mr-1"></i>Keluar
+                        </button>
+                        <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
+                            <i class="fa-solid fa-circle-half-stroke text-lg"></i>
                         </button>
                     </div>
-                    <div id="chips-container" class="flex flex-wrap gap-1.5 text-xs font-medium"></div>
                 </div>
 
-                <input type="text" id="input-keterangan" placeholder="Keterangan transaksi..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow">
-                
-                <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-800/80 p-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                    <span id="lokasi-status" class="text-xs font-semibold text-slate-500"><i class="fa-solid fa-location-dot"></i> Lokasi Belum Aktif</span>
-                    <button onclick="mintaLokasi()" class="text-[11px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 px-2.5 py-1 rounded-lg font-bold hover:bg-emerald-200 transition-colors">Deteksi Lokasi</button>
+                <!-- Segmented Tab Control (Pribadi vs Bisnis) -->
+                <div class="segmented-control flex gap-1">
+                    <button onclick="switchTab('Pribadi')" id="btn-pribadi" class="flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-active">Pribadi</button>
+                    <button onclick="switchTab('Bisnis')" id="btn-bisnis" class="flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-inactive">Mulae.Production</button>
                 </div>
 
-                <div class="relative">
-                    <label for="input-foto" class="flex items-center justify-center cursor-pointer w-full py-2.5 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                        <i class="fa-solid fa-camera mr-2 text-emerald-500"></i> Lampirkan Struk / Foto
-                    </label>
-                    <input type="file" id="input-foto" accept="image/*" capture="environment" class="hidden" onchange="previewAndCompressFoto(event)">
+                <!-- Dashboard Grand Total Saldo -->
+                <div class="glass-card p-5 fade-in">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Total Saldo Kas</p>
+                            <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight" id="sisa-saldo">Rp0</h2>
+                        </div>
+                        <div class="text-right bg-amber-50 dark:bg-amber-950/40 p-2 px-3 rounded-xl border border-amber-200/80 dark:border-amber-800/50">
+                            <p class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-0.5">Hutang Aktif</p>
+                            <p class="font-bold text-sm text-amber-700 dark:text-amber-300" id="total-hutang">Rp0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-3 mt-1">
+                        <div>
+                            <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5"><i class="fa-solid fa-arrow-down-long text-emerald-500 mr-1"></i> Total Masuk</p>
+                            <p class="font-bold text-emerald-600 dark:text-emerald-400 text-sm" id="total-masuk">Rp0</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5"><i class="fa-solid fa-arrow-up-long text-rose-500 mr-1"></i> Total Keluar</p>
+                            <p class="font-bold text-rose-600 dark:text-rose-400 text-sm" id="total-keluar">Rp0</p>
+                        </div>
+                    </div>
                 </div>
-                
-                <div id="foto-preview-container" class="hidden relative mt-2">
-                    <img id="foto-preview" src="" class="w-full h-28 object-cover rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <button onclick="hapusFoto()" class="absolute top-2 right-2 bg-slate-900/80 backdrop-blur text-white p-1 rounded-full text-xs hover:bg-rose-600 transition-colors">
-                        <i class="fa-solid fa-xmark px-1.5 py-0.5"></i>
+
+                <!-- Form Input Transaksi -->
+                <div class="glass-card p-5 fade-in" id="form-section">
+                    <div class="segmented-control flex gap-1 mb-3">
+                        <button onclick="setJenis('Pengeluaran')" id="btn-keluar" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-active text-rose-600">Pengeluaran</button>
+                        <button onclick="setJenis('Pemasukan')" id="btn-masuk" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-inactive">Pemasukan</button>
+                        <button onclick="setJenis('Hutang')" id="btn-hutang" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-inactive">Catat Hutang</button>
+                    </div>
+
+                    <div id="panel-sifat" class="flex gap-2 mb-4">
+                        <button onclick="setSifat('Produktif')" id="btn-produktif" class="flex-1 py-1.5 text-xs font-semibold rounded-lg border-2 border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 transition-all">💡 Produktif</button>
+                        <button onclick="setSifat('Self-Reward')" id="btn-selfreward" class="flex-1 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-400 hover:text-fuchsia-600 transition-all">🎉 Self-Reward</button>
+                    </div>
+
+                    <div class="space-y-3.5">
+                        <div class="relative">
+                            <span class="absolute left-3.5 top-3 text-slate-400 text-sm"><i class="fa-solid fa-clock"></i></span>
+                            <input type="datetime-local" id="input-waktu" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 pl-10 pr-3 font-semibold text-xs outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow text-slate-700 dark:text-slate-200">
+                        </div>
+
+                        <div class="relative">
+                            <span class="absolute left-3.5 top-3 text-slate-400 font-bold text-sm">Rp</span>
+                            <input type="number" id="input-nominal" placeholder="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 pl-10 pr-3 font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow">
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Pilihan Cepat (<span id="label-jenis-chip">Pengeluaran</span>)</span>
+                                <button onclick="toggleManageChips()" class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
+                                    <i class="fa-solid fa-pen-to-square"></i> Kelola
+                                </button>
+                            </div>
+                            <div id="chips-container" class="flex flex-wrap gap-1.5 text-xs font-medium"></div>
+                        </div>
+
+                        <input type="text" id="input-keterangan" placeholder="Keterangan transaksi..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow">
+                        
+                        <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-800/80 p-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <span id="lokasi-status" class="text-xs font-semibold text-slate-500"><i class="fa-solid fa-location-dot"></i> Lokasi Belum Aktif</span>
+                            <button onclick="mintaLokasi()" class="text-[11px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 px-2.5 py-1 rounded-lg font-bold hover:bg-emerald-200 transition-colors">Deteksi Lokasi</button>
+                        </div>
+
+                        <div class="relative">
+                            <label for="input-foto" class="flex items-center justify-center cursor-pointer w-full py-2.5 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                <i class="fa-solid fa-camera mr-2 text-emerald-500"></i> Lampirkan Struk / Foto
+                            </label>
+                            <input type="file" id="input-foto" accept="image/*" capture="environment" class="hidden" onchange="previewAndCompressFoto(event)">
+                        </div>
+                        
+                        <div id="foto-preview-container" class="hidden relative mt-2">
+                            <img id="foto-preview" src="" class="w-full h-28 object-cover rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                            <button onclick="hapusFoto()" class="absolute top-2 right-2 bg-slate-900/80 backdrop-blur text-white p-1 rounded-full text-xs hover:bg-rose-600 transition-colors">
+                                <i class="fa-solid fa-xmark px-1.5 py-0.5"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="flex gap-2 pt-1">
+                            <button onclick="batalEdit()" id="btn-batal" class="hidden w-1/3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl py-3 font-bold text-xs transition-all">Batal</button>
+                            <button onclick="simpanTransaksi()" id="btn-simpan" class="w-full flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-3 font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-[0.98]">
+                                Simpan Transaksi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sync to Google Sheets -->
+                <div class="text-center fade-in">
+                    <button onclick="syncToSheets()" class="w-full py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50 rounded-xl hover:bg-emerald-100 transition-colors">
+                        <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Sinkronisasi ke Google Sheets
                     </button>
+                    <p id="sync-status" class="text-xs mt-1.5 font-semibold hidden">Menyinkronkan...</p>
                 </div>
+            </div>
+
+            <!-- KOLOM KANAN (ANALITIK, KALENDER, DETAIL ARSIP BULAN) -->
+            <div class="lg:col-span-7 space-y-5">
                 
-                <div class="flex gap-2 pt-1">
-                    <button onclick="batalEdit()" id="btn-batal" class="hidden w-1/3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl py-3 font-bold text-xs transition-all">Batal</button>
-                    <button onclick="simpanTransaksi()" id="btn-simpan" class="w-full flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-3 font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-[0.98]">
-                        Simpan Transaksi
-                    </button>
+                <!-- KARTU ANALITIK PENGELUARAN (PRODUKTIF VS SELF-REWARD) -->
+                <div class="glass-card p-5 fade-in space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-emerald-500"></i> Analitik Pengeluaran Bulan Ini
+                        </h3>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500" id="analytics-month-tag">Bulan Ini</span>
+                    </div>
+
+                    <!-- Progress Bar Dual Color -->
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between text-xs font-bold">
+                            <span class="text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-circle text-[8px] mr-1"></i> Produktif (<span id="pct-produktif">0%</span>)</span>
+                            <span class="text-fuchsia-600 dark:text-fuchsia-400">Self-Reward (<span id="pct-selfreward">0%</span>) <i class="fa-solid fa-circle text-[8px] ml-1"></i></span>
+                        </div>
+                        <div class="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
+                            <div id="bar-produktif" class="bg-emerald-500 h-full transition-all duration-500" style="width: 50%"></div>
+                            <div id="bar-selfreward" class="bg-fuchsia-500 h-full transition-all duration-500" style="width: 50%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Detail Card Nominal Split -->
+                    <div class="grid grid-cols-2 gap-3 pt-1">
+                        <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 p-3 rounded-xl">
+                            <p class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase">💡 Produktif</p>
+                            <p class="text-sm font-extrabold text-emerald-900 dark:text-emerald-200 mt-0.5" id="val-produktif">Rp0</p>
+                        </div>
+                        <div class="bg-fuchsia-50 dark:bg-fuchsia-950/30 border border-fuchsia-100 dark:border-fuchsia-900/50 p-3 rounded-xl">
+                            <p class="text-[10px] font-bold text-fuchsia-700 dark:text-fuchsia-400 uppercase">🎉 Self-Reward</p>
+                            <p class="text-sm font-extrabold text-fuchsia-900 dark:text-fuchsia-200 mt-0.5" id="val-selfreward">Rp0</p>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- KALENDER & RIWAYAT PER BULAN -->
+                <div class="glass-card p-5 fade-in space-y-4">
+                    <div class="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
+                        <button onclick="gantiBulanKalender(-1)" class="p-1.5 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <div class="text-center">
+                            <h3 class="font-extrabold text-sm text-slate-800 dark:text-slate-100 uppercase tracking-wide" id="cal-month-title">Bulan Ini</h3>
+                            <p class="text-[10px] text-slate-400 font-semibold" id="cal-month-sub">Pilih Tanggal</p>
+                        </div>
+                        <button onclick="gantiBulanKalender(1)" class="p-1.5 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-extrabold text-slate-400 uppercase">
+                        <div>Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div>
+                    </div>
+
+                    <div id="calendar-tiles" class="calendar-grid"></div>
+
+                    <div class="bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800 text-xs space-y-1.5">
+                        <div class="flex justify-between font-semibold">
+                            <span class="text-slate-500">Pemasukan Bulan Ini:</span>
+                            <span class="text-emerald-600 dark:text-emerald-400 font-bold" id="cal-rekap-masuk">Rp0</span>
+                        </div>
+                        <div class="flex justify-between font-semibold">
+                            <span class="text-slate-500">Pengeluaran Bulan Ini:</span>
+                            <span class="text-rose-600 dark:text-rose-400 font-bold" id="cal-rekap-keluar">Rp0</span>
+                        </div>
+                        <div class="flex justify-between font-bold border-t border-slate-200 dark:border-slate-800 pt-1.5 mt-1">
+                            <span class="text-slate-700 dark:text-slate-200">Sisa / Laba Bulan Ini:</span>
+                            <span id="cal-rekap-laba" class="text-emerald-600 dark:text-emerald-400">Rp0</span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-1">
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-200" id="selected-date-label">Semua Hari di Bulan Ini</span>
+                        <button onclick="resetFilterTanggal()" id="btn-reset-filter" class="hidden text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline">Tampilkan Semua</button>
+                    </div>
+
+                    <div id="history-list-detail" class="space-y-2.5 pt-1"></div>
+                </div>
+
             </div>
         </div>
-
-        <div class="text-center fade-in">
-            <button onclick="syncToSheets()" class="w-full py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50 rounded-xl hover:bg-emerald-100 transition-colors">
-                <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Sinkronisasi ke Google Sheets
-            </button>
-            <p id="sync-status" class="text-xs mt-1.5 font-semibold hidden">Menyinkronkan...</p>
-        </div>
-
-        <div class="glass-card p-5 fade-in space-y-4">
-            <div class="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
-                <button onclick="gantiBulanKalender(-1)" class="p-1.5 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs">
-                    <i class="fa-solid fa-chevron-left"></i>
-                </button>
-                <div class="text-center">
-                    <h3 class="font-extrabold text-sm text-slate-800 dark:text-slate-100 uppercase tracking-wide" id="cal-month-title">Bulan Ini</h3>
-                    <p class="text-[10px] text-slate-400 font-semibold" id="cal-month-sub">Pilih Tanggal</p>
-                </div>
-                <button onclick="gantiBulanKalender(1)" class="p-1.5 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs">
-                    <i class="fa-solid fa-chevron-right"></i>
-                </button>
-            </div>
-
-            <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-extrabold text-slate-400 uppercase">
-                <div>Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div>
-            </div>
-
-            <div id="calendar-tiles" class="calendar-grid"></div>
-
-            <div class="bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800 text-xs space-y-1.5">
-                <div class="flex justify-between font-semibold">
-                    <span class="text-slate-500">Pemasukan Bulan Ini:</span>
-                    <span class="text-emerald-600 dark:text-emerald-400 font-bold" id="cal-rekap-masuk">Rp0</span>
-                </div>
-                <div class="flex justify-between font-semibold">
-                    <span class="text-slate-500">Pengeluaran Bulan Ini:</span>
-                    <span class="text-rose-600 dark:text-rose-400 font-bold" id="cal-rekap-keluar">Rp0</span>
-                </div>
-                <div class="flex justify-between font-bold border-t border-slate-200 dark:border-slate-800 pt-1.5 mt-1">
-                    <span class="text-slate-700 dark:text-slate-200">Sisa / Laba Bulan Ini:</span>
-                    <span id="cal-rekap-laba" class="text-emerald-600 dark:text-emerald-400">Rp0</span>
-                </div>
-            </div>
-
-            <div class="flex justify-between items-center pt-1">
-                <span class="text-xs font-bold text-slate-700 dark:text-slate-200" id="selected-date-label">Semua Hari di Bulan Ini</span>
-                <button onclick="resetFilterTanggal()" id="btn-reset-filter" class="hidden text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline">Tampilkan Semua</button>
-            </div>
-
-            <div id="history-list-detail" class="space-y-2.5 pt-1"></div>
-        </div>
-
     </div>
 
     <!-- SCRIPT FIREBASE & LOGIKA APLIKASI -->
@@ -744,6 +795,7 @@
         window.resetFilterTanggal = function() { selectedDayFilter = null; kalkulasiDanRender(); }
 
         function kalkulasiDanRender() {
+            // 1. Grand Total Saldo
             let grandMasuk = 0, grandKeluar = 0, grandHutang = 0;
             dataTransaksi.filter(t => t.entitas === currentTab).forEach(t => {
                 if(t.jenis === 'Pemasukan') grandMasuk += t.nominal;
@@ -756,8 +808,10 @@
             document.getElementById('sisa-saldo').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(grandMasuk - grandKeluar);
             document.getElementById('total-hutang').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(grandHutang);
 
+            // 2. Filter data khusus bulan kalender aktif
             const monthName = activeCalDate.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
             document.getElementById('cal-month-title').innerText = monthName;
+            document.getElementById('analytics-month-tag').innerText = monthName;
 
             const targetYear = activeCalDate.getFullYear();
             const targetMonth = activeCalDate.getMonth();
@@ -770,17 +824,43 @@
                 return t.bulan === monthName;
             });
 
+            // 3. Kalkulasi Analitik Produktif vs Self-Reward
+            let totalProduktif = 0;
+            let totalSelfReward = 0;
             let calMasuk = 0, calKeluar = 0;
+
             dataBulanIni.forEach(t => {
                 if(t.jenis === 'Pemasukan') calMasuk += t.nominal;
-                else if(t.jenis === 'Pengeluaran') calKeluar += t.nominal;
+                else if(t.jenis === 'Pengeluaran') {
+                    calKeluar += t.nominal;
+                    if(t.sifat === 'Self-Reward') totalSelfReward += t.nominal;
+                    else totalProduktif += t.nominal; // Default dianggap produktif
+                }
             });
 
+            // Persentase & Render Bar Split
+            const totalKeluarBulanIni = totalProduktif + totalSelfReward;
+            let pctProd = 0, pctSelf = 0;
+            if(totalKeluarBulanIni > 0) {
+                pctProd = Math.round((totalProduktif / totalKeluarBulanIni) * 100);
+                pctSelf = 100 - pctProd;
+            }
+
+            document.getElementById('pct-produktif').innerText = pctProd + "%";
+            document.getElementById('pct-selfreward').innerText = pctSelf + "%";
+            document.getElementById('bar-produktif').style.width = pctProd + "%";
+            document.getElementById('bar-selfreward').style.width = pctSelf + "%";
+
+            document.getElementById('val-produktif').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(totalProduktif);
+            document.getElementById('val-selfreward').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(totalSelfReward);
+
+            // 4. Rekap Bulanan Kalender
             document.getElementById('cal-rekap-masuk').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(calMasuk);
             document.getElementById('cal-rekap-keluar').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(calKeluar);
             const labaBulan = calMasuk - calKeluar;
             document.getElementById('cal-rekap-laba').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(labaBulan);
 
+            // 5. Render Grid Kalender 1x1
             const tilesContainer = document.getElementById('calendar-tiles');
             tilesContainer.innerHTML = '';
             const firstDayIndex = new Date(targetYear, targetMonth, 1).getDay();
@@ -818,6 +898,7 @@
                 `;
             }
 
+            // 6. Render Detail List Transaksi
             const listDetail = document.getElementById('history-list-detail');
             listDetail.innerHTML = '';
 
