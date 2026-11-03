@@ -11,10 +11,16 @@
         .theme-transition { transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
         
         .glass-card {
-            background: rgba(255, 255, 255, 1); border: 1px solid rgba(226, 232, 240, 0.8);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); border-radius: 16px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+            border-radius: 16px;
         }
-        .dark .glass-card { background: rgba(30, 41, 59, 1); border: 1px solid rgba(51, 65, 85, 0.8); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); }
+        .dark .glass-card { 
+            background: #1e293b; 
+            border: 1px solid #334155; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); 
+        }
 
         .segmented-control { background-color: #f1f5f9; border-radius: 12px; padding: 4px; }
         .dark .segmented-control { background-color: #0f172a; }
@@ -24,131 +30,217 @@
         .tab-inactive { color: #64748b; }
         .dark .tab-inactive { color: #94a3b8; }
 
-        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: translateY(0); } }
+        
+        /* Grid 1x1 Kalender */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+        .day-tile {
+            aspect-ratio: 1 / 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 theme-transition pb-24 min-h-screen">
-    <div class="max-w-md mx-auto space-y-6 pt-6 px-4">
+    <div class="max-w-md mx-auto space-y-5 pt-6 px-4">
         
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-4">
-            <h1 class="text-xl font-semibold tracking-tight"><i class="fa-solid fa-wallet text-indigo-500 mr-2"></i>Buku Kas</h1>
+        <!-- Header Top Bar -->
+        <div class="flex justify-between items-center mb-2">
+            <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center">
+                <i class="fa-solid fa-wallet text-indigo-600 mr-2.5"></i>Buku Kas
+            </h1>
             <div class="flex items-center gap-2">
-                <span id="koneksi-status" class="text-[10px] font-bold px-2 py-1 rounded bg-amber-100 text-amber-600"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</span>
-                <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-500 dark:text-slate-400">
+                <span id="koneksi-status" class="text-[10px] font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Loading...
+                </span>
+                <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
                     <i class="fa-solid fa-circle-half-stroke text-lg"></i>
                 </button>
             </div>
         </div>
 
-        <!-- Segmented Tab Control -->
+        <!-- Segmented Tab Control (Pribadi vs Bisnis) -->
         <div class="segmented-control flex gap-1">
             <button onclick="switchTab('Pribadi')" id="btn-pribadi" class="flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-active">Pribadi</button>
             <button onclick="switchTab('Bisnis')" id="btn-bisnis" class="flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-inactive">Mulae.Production</button>
         </div>
 
-        <!-- Dashboard GRAND TOTAL Keseluruhan (All Time) -->
-        <div class="glass-card p-6 fade-in">
+        <!-- Dashboard Grand Total -->
+        <div class="glass-card p-5 fade-in">
             <div class="flex justify-between items-start mb-4">
                 <div>
-                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Total Saldo Aktif</p>
-                    <h2 class="text-3xl font-bold tracking-tight" id="sisa-saldo">Rp0</h2>
+                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Total Saldo Kas</p>
+                    <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight" id="sisa-saldo">Rp0</h2>
                 </div>
-                <div class="text-right bg-amber-50 dark:bg-amber-900/30 p-2 rounded-lg border border-amber-200 dark:border-amber-700/50">
-                    <p class="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-0.5">Hutang Berjalan</p>
-                    <p class="font-bold text-amber-700 dark:text-amber-300" id="total-hutang">Rp0</p>
+                <div class="text-right bg-amber-50 dark:bg-amber-950/40 p-2 px-3 rounded-xl border border-amber-200/80 dark:border-amber-800/50">
+                    <p class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-0.5">Hutang Aktif</p>
+                    <p class="font-bold text-sm text-amber-700 dark:text-amber-300" id="total-hutang">Rp0</p>
                 </div>
             </div>
             
-            <div class="flex justify-between border-t border-slate-200 dark:border-slate-700 pt-4">
+            <div class="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-3 mt-1">
                 <div>
-                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1"><i class="fa-solid fa-arrow-down text-emerald-500 mr-1"></i> Total Pemasukan</p>
-                    <p class="font-semibold text-emerald-600 dark:text-emerald-400" id="total-masuk">Rp0</p>
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5"><i class="fa-solid fa-arrow-down-long text-emerald-500 mr-1"></i> Total Masuk</p>
+                    <p class="font-bold text-emerald-600 dark:text-emerald-400 text-sm" id="total-masuk">Rp0</p>
                 </div>
                 <div class="text-right">
-                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1"><i class="fa-solid fa-arrow-up text-rose-500 mr-1"></i> Total Pengeluaran</p>
-                    <p class="font-semibold text-rose-600 dark:text-rose-400" id="total-keluar">Rp0</p>
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5"><i class="fa-solid fa-arrow-up-long text-rose-500 mr-1"></i> Total Keluar</p>
+                    <p class="font-bold text-rose-600 dark:text-rose-400 text-sm" id="total-keluar">Rp0</p>
                 </div>
             </div>
         </div>
 
-        <!-- Form Input -->
-        <div class="glass-card p-6 fade-in" id="form-section">
+        <!-- Form Input Transaksi -->
+        <div class="glass-card p-5 fade-in" id="form-section">
             <div class="segmented-control flex gap-1 mb-3">
-                <button onclick="setJenis('Pengeluaran')" id="btn-keluar" class="flex-1 py-2 text-xs font-semibold rounded-lg transition-all tab-active text-rose-600">Pengeluaran</button>
-                <button onclick="setJenis('Pemasukan')" id="btn-masuk" class="flex-1 py-2 text-xs font-semibold rounded-lg transition-all tab-inactive">Pemasukan</button>
-                <button onclick="setJenis('Hutang')" id="btn-hutang" class="flex-1 py-2 text-xs font-semibold rounded-lg transition-all tab-inactive">Catat Hutang</button>
+                <button onclick="setJenis('Pengeluaran')" id="btn-keluar" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-active text-rose-600">Pengeluaran</button>
+                <button onclick="setJenis('Pemasukan')" id="btn-masuk" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-inactive">Pemasukan</button>
+                <button onclick="setJenis('Hutang')" id="btn-hutang" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-inactive">Catat Hutang</button>
             </div>
 
-            <!-- Panel Sifat Pengeluaran (Hanya muncul jika Pengeluaran) -->
-            <div id="panel-sifat" class="flex gap-2 mb-4 transition-all">
-                <button onclick="setSifat('Produktif')" id="btn-produktif" class="flex-1 py-1.5 text-xs font-semibold rounded border-2 border-indigo-200 bg-indigo-50 text-indigo-600 dark:border-indigo-800 dark:bg-indigo-900/30 transition-all">💡 Produktif</button>
-                <button onclick="setSifat('Self-Reward')" id="btn-selfreward" class="flex-1 py-1.5 text-xs font-semibold rounded border border-slate-200 text-slate-400 hover:text-fuchsia-500 transition-all">🎉 Menyenangkan Diri</button>
+            <!-- Panel Tag Sifat Pengeluaran -->
+            <div id="panel-sifat" class="flex gap-2 mb-4">
+                <button onclick="setSifat('Produktif')" id="btn-produktif" class="flex-1 py-1.5 text-xs font-semibold rounded-lg border-2 border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300 transition-all">💡 Produktif</button>
+                <button onclick="setSifat('Self-Reward')" id="btn-selfreward" class="flex-1 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-400 hover:text-fuchsia-600 transition-all">🎉 Self-Reward</button>
             </div>
 
-            <div class="space-y-4">
-                
+            <div class="space-y-3.5">
+                <!-- Waktu & Tanggal Input -->
                 <div class="relative">
-                    <span class="absolute left-4 top-3.5 text-slate-400 font-semibold"><i class="fa-solid fa-clock"></i></span>
-                    <input type="datetime-local" id="input-waktu" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 pl-10 pr-4 font-semibold text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow text-slate-600 dark:text-slate-300">
+                    <span class="absolute left-3.5 top-3 text-slate-400 text-sm"><i class="fa-solid fa-clock"></i></span>
+                    <input type="datetime-local" id="input-waktu" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 pl-10 pr-3 font-semibold text-xs outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow text-slate-700 dark:text-slate-200">
                 </div>
 
+                <!-- Nominal -->
                 <div class="relative">
-                    <span class="absolute left-4 top-3.5 text-slate-400 font-semibold">Rp</span>
-                    <input type="number" id="input-nominal" placeholder="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 pl-10 pr-4 font-semibold outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                    <span class="absolute left-3.5 top-3 text-slate-400 font-bold text-sm">Rp</span>
+                    <input type="number" id="input-nominal" placeholder="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 pl-10 pr-3 font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
                 </div>
                 
-                <div id="chips-container" class="flex flex-wrap gap-2 text-xs font-medium"></div>
-
-                <input type="text" id="input-keterangan" placeholder="Keterangan transaksi..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 font-medium outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
-                
-                <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-800 p-2 px-3 rounded-lg border border-slate-200 dark:border-slate-700">
-                    <span id="lokasi-status" class="text-xs font-medium text-slate-500"><i class="fa-solid fa-location-dot"></i> Lokasi Belum Aktif</span>
-                    <button onclick="mintaLokasi()" class="text-xs bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300 px-2 py-1 rounded font-bold hover:bg-indigo-200 transition-colors">Deteksi Lokasi</button>
+                <!-- Bar Pilihan Cepat Terpisah (Pengeluaran / Pemasukan) -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Pilihan Cepat (<span id="label-jenis-chip">Pengeluaran</span>)</span>
+                        <button onclick="toggleManageChips()" class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                            <i class="fa-solid fa-pen-to-square"></i> Kelola
+                        </button>
+                    </div>
+                    <div id="chips-container" class="flex flex-wrap gap-1.5 text-xs font-medium"></div>
                 </div>
 
+                <!-- Keterangan Transaksi -->
+                <input type="text" id="input-keterangan" placeholder="Keterangan transaksi..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                
+                <!-- Deteksi Lokasi -->
+                <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-800/80 p-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <span id="lokasi-status" class="text-xs font-semibold text-slate-500"><i class="fa-solid fa-location-dot"></i> Lokasi Belum Aktif</span>
+                    <button onclick="mintaLokasi()" class="text-[11px] bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-2.5 py-1 rounded-lg font-bold hover:bg-indigo-200 transition-colors">Deteksi Lokasi</button>
+                </div>
+
+                <!-- Upload Struk Foto -->
                 <div class="relative">
-                    <label for="input-foto" class="flex items-center justify-center cursor-pointer w-full py-3 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                        <i class="fa-solid fa-camera mr-2"></i> Tambah Struk / Foto
+                    <label for="input-foto" class="flex items-center justify-center cursor-pointer w-full py-2.5 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                        <i class="fa-solid fa-camera mr-2 text-indigo-500"></i> Lampirkan Struk / Foto
                     </label>
                     <input type="file" id="input-foto" accept="image/*" capture="environment" class="hidden" onchange="previewAndCompressFoto(event)">
                 </div>
                 
                 <div id="foto-preview-container" class="hidden relative mt-2">
-                    <img id="foto-preview" src="" class="w-full h-32 object-cover rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <button onclick="hapusFoto()" class="absolute top-2 right-2 bg-slate-800/70 backdrop-blur text-white p-1.5 rounded-full text-xs hover:bg-rose-500 transition-colors">
-                        <i class="fa-solid fa-xmark px-1"></i>
+                    <img id="foto-preview" src="" class="w-full h-28 object-cover rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <button onclick="hapusFoto()" class="absolute top-2 right-2 bg-slate-900/80 backdrop-blur text-white p-1 rounded-full text-xs hover:bg-rose-600 transition-colors">
+                        <i class="fa-solid fa-xmark px-1.5 py-0.5"></i>
                     </button>
                 </div>
                 
-                <div class="flex gap-2">
-                    <button onclick="batalEdit()" id="btn-batal" class="hidden w-1/3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl py-3.5 font-semibold transition-all">Batal</button>
-                    <button onclick="simpanTransaksi()" id="btn-simpan" class="w-full flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-3.5 font-semibold shadow-md hover:shadow-lg transition-all active:scale-[0.98]">
+                <!-- Action Buttons -->
+                <div class="flex gap-2 pt-1">
+                    <button onclick="batalEdit()" id="btn-batal" class="hidden w-1/3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl py-3 font-bold text-xs transition-all">Batal</button>
+                    <button onclick="simpanTransaksi()" id="btn-simpan" class="w-full flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-3 font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-[0.98]">
                         Simpan Transaksi
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Sinkronisasi ke Google Sheets -->
+        <!-- Tombol Sync Google Sheets -->
         <div class="text-center fade-in">
-            <button onclick="syncToSheets()" class="w-full py-3 text-sm font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors">
+            <button onclick="syncToSheets()" class="w-full py-2.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 rounded-xl hover:bg-indigo-100 transition-colors">
                 <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Sinkronisasi ke Google Sheets
             </button>
-            <p id="sync-status" class="text-xs mt-2 font-medium hidden">Menyinkronkan...</p>
+            <p id="sync-status" class="text-xs mt-1.5 font-semibold hidden">Menyinkronkan...</p>
         </div>
 
-        <!-- Riwayat Transaksi (Dikelompokkan per Bulan) -->
-        <div id="history-list" class="space-y-6 pt-2 pb-10"></div>
+        <!-- KALENDER & RIWAYAT ARSIP PER BULAN -->
+        <div class="glass-card p-5 fade-in space-y-4">
+            <!-- Selector Bulan Navigasi -->
+            <div class="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
+                <button onclick="gantiBulanKalender(-1)" class="p-1.5 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <div class="text-center">
+                    <h3 class="font-extrabold text-sm text-slate-800 dark:text-slate-100 uppercase tracking-wide" id="cal-month-title">Bulan Ini</h3>
+                    <p class="text-[10px] text-slate-400 font-semibold" id="cal-month-sub font-mono">Pilih Tanggal</p>
+                </div>
+                <button onclick="gantiBulanKalender(1)" class="p-1.5 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <!-- Header Nama Hari -->
+            <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-extrabold text-slate-400 uppercase">
+                <div>Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div>
+            </div>
+
+            <!-- Grid 1x1 Tanggal Kalender (30-31 Hari) -->
+            <div id="calendar-tiles" class="calendar-grid"></div>
+
+            <!-- Rekapitulasi Ringkas Bulan Terpilih -->
+            <div class="bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800 text-xs space-y-1.5">
+                <div class="flex justify-between font-semibold">
+                    <span class="text-slate-500">Pemasukan Bulan Ini:</span>
+                    <span class="text-emerald-600 dark:text-emerald-400 font-bold" id="cal-rekap-masuk">Rp0</span>
+                </div>
+                <div class="flex justify-between font-semibold">
+                    <span class="text-slate-500">Pengeluaran Bulan Ini:</span>
+                    <span class="text-rose-600 dark:text-rose-400 font-bold" id="cal-rekap-keluar">Rp0</span>
+                </div>
+                <div class="flex justify-between font-bold border-t border-slate-200 dark:border-slate-800 pt-1.5 mt-1">
+                    <span class="text-slate-700 dark:text-slate-200">Sisa / Laba Bulan Ini:</span>
+                    <span id="cal-rekap-laba" class="text-indigo-600 dark:text-indigo-400">Rp0</span>
+                </div>
+            </div>
+
+            <!-- Tombol Reset Filter Tanggal -->
+            <div class="flex justify-between items-center pt-1">
+                <span class="text-xs font-bold text-slate-700 dark:text-slate-200" id="selected-date-label">Semua Hari di Bulan Ini</span>
+                <button onclick="resetFilterTanggal()" id="btn-reset-filter" class="hidden text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline">Tampilkan Semua</button>
+            </div>
+
+            <!-- Daftar Detail Transaksi Tanggal/Bulan Terpilih -->
+            <div id="history-list-detail" class="space-y-2.5 pt-1"></div>
+        </div>
+
     </div>
 
-    <!-- SCRIPT TYPE MODULE UNTUK FIREBASE -->
+    <!-- SCRIPT FIREBASE & LOGIKA APLIKASI -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Konfigurasi Firebase Anda
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCE9jIpz-iM2gy6N-0CrtXcca7SeA-2ZRg",
             authDomain: "keuangan-fea39.firebaseapp.com",
@@ -161,23 +253,34 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
-        // URL Google Apps Script Anda
         const GOOGLE_APP_SCRIPT_URL = "URL_APPS_SCRIPT_ANDA_DISINI";
 
         let currentTab = 'Pribadi';
         let jenisTx = 'Pengeluaran';
-        let sifatTx = 'Produktif'; // Default Sifat
+        let sifatTx = 'Produktif';
         let dataTransaksi = [];
         let base64FotoAktif = null;
         let editDocId = null;
         let currentLocationStr = null;
+        let isManagingChips = false;
 
-        let categories = JSON.parse(localStorage.getItem('mulaeCats')) || {
-            Pribadi: ['Makan', 'Bensin', 'Topup', 'Tagihan'],
-            Bisnis: ['Sewa Alat', 'Transport', 'Honor', 'DP Klien']
+        // Tanggal Kalender Aktif (Default: Bulan & Tahun Ini)
+        let activeCalDate = new Date();
+        let selectedDayFilter = null; // Filter hari spesifik (null = tampilkan sebulan)
+
+        // Structure Pilihan Cepat Terpisah (Pengeluaran vs Pemasukan)
+        let categories = JSON.parse(localStorage.getItem('mulaeCatsV2')) || {
+            Pribadi: {
+                Pengeluaran: ['Makan', 'Bensin', 'Nongkrong', 'Tagihan', 'Belanja'],
+                Pemasukan: ['Gaji', 'Transfer', 'Bonus', 'Cashback']
+            },
+            Bisnis: {
+                Pengeluaran: ['Sewa Alat', 'Transport Job', 'Honor Crew', 'Makan Crew', 'Bensin Operational'],
+                Pemasukan: ['DP Klien', 'Pelunasan', 'Jasa Edit', 'Sewa Equipment']
+            }
         };
 
-        // --- FIREBASE REALTIME LISTENER ---
+        // Firebase Real-time Listener
         const q = query(collection(db, "transactions"), orderBy("id", "desc"));
         onSnapshot(q, (snapshot) => {
             dataTransaksi = [];
@@ -185,16 +288,16 @@
                 dataTransaksi.push({ ...doc.data(), docId: doc.id });
             });
             
-            document.getElementById('koneksi-status').className = "text-[10px] font-bold px-2 py-1 rounded bg-emerald-100 text-emerald-600";
-            document.getElementById('koneksi-status').innerHTML = '<i class="fa-solid fa-cloud-check"></i> Tersinkronisasi';
+            document.getElementById('koneksi-status').className = "text-[10px] font-bold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300";
+            document.getElementById('koneksi-status').innerHTML = '<i class="fa-solid fa-cloud-check"></i> Tersinkron';
             
             kalkulasiDanRender();
         }, (error) => {
-            document.getElementById('koneksi-status').className = "text-[10px] font-bold px-2 py-1 rounded bg-rose-100 text-rose-600";
+            document.getElementById('koneksi-status').className = "text-[10px] font-bold px-2 py-1 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300";
             document.getElementById('koneksi-status').innerHTML = '<i class="fa-solid fa-cloud-xmark"></i> Offline';
         });
 
-        // --- FUNGSI-FUNGSI UTAMA ---
+        // --- EXPOSE FUNCTIONS TO WINDOW ---
         
         window.setWaktuSekarang = function() {
             const now = new Date();
@@ -221,38 +324,79 @@
             const btnSelf = document.getElementById('btn-selfreward');
 
             if(sifat === 'Produktif') {
-                btnProd.className = "flex-1 py-1.5 text-xs font-semibold rounded border-2 border-indigo-200 bg-indigo-50 text-indigo-600 dark:border-indigo-800 dark:bg-indigo-900/30 transition-all";
-                btnSelf.className = "flex-1 py-1.5 text-xs font-semibold rounded border border-slate-200 text-slate-400 hover:text-fuchsia-500 transition-all";
+                btnProd.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg border-2 border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300 transition-all";
+                btnSelf.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-400 hover:text-fuchsia-600 transition-all";
             } else {
-                btnSelf.className = "flex-1 py-1.5 text-xs font-semibold rounded border-2 border-fuchsia-200 bg-fuchsia-50 text-fuchsia-600 dark:border-fuchsia-800 dark:bg-fuchsia-900/30 transition-all";
-                btnProd.className = "flex-1 py-1.5 text-xs font-semibold rounded border border-slate-200 text-slate-400 hover:text-indigo-500 transition-all";
+                btnSelf.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg border-2 border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 dark:border-fuchsia-800 dark:bg-fuchsia-950/40 dark:text-fuchsia-300 transition-all";
+                btnProd.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-400 hover:text-indigo-600 transition-all";
             }
         }
 
         window.setJenis = function(jenis) {
             jenisTx = jenis;
-            document.getElementById('btn-keluar').className = jenis === 'Pengeluaran' ? "flex-1 py-2 text-xs font-semibold rounded-lg transition-all tab-active text-rose-600 dark:text-rose-400" : "flex-1 py-2 text-xs font-semibold rounded-lg transition-all tab-inactive";
-            document.getElementById('btn-masuk').className = jenis === 'Pemasukan' ? "flex-1 py-2 text-xs font-semibold rounded-lg transition-all tab-active text-emerald-600 dark:text-emerald-400" : "flex-1 py-2 text-xs font-semibold rounded-lg transition-all tab-inactive";
-            document.getElementById('btn-hutang').className = jenis === 'Hutang' ? "flex-1 py-2 text-xs font-semibold rounded-lg transition-all tab-active text-amber-600 dark:text-amber-400" : "flex-1 py-2 text-xs font-semibold rounded-lg transition-all tab-inactive";
+            document.getElementById('btn-keluar').className = jenis === 'Pengeluaran' ? "flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-active text-rose-600 dark:text-rose-400" : "flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-inactive";
+            document.getElementById('btn-masuk').className = jenis === 'Pemasukan' ? "flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-active text-emerald-600 dark:text-emerald-400" : "flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-inactive";
+            document.getElementById('btn-hutang').className = jenis === 'Hutang' ? "flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-active text-amber-600 dark:text-amber-400" : "flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-inactive";
             
-            // Sembunyikan Sifat jika bukan pengeluaran
             document.getElementById('panel-sifat').style.display = (jenis === 'Pengeluaran') ? 'flex' : 'none';
+            document.getElementById('label-jenis-chip').innerText = jenis === 'Hutang' ? 'Pengeluaran' : jenis;
+            
+            renderChips();
         }
 
+        // --- MANAJEMEN CATATAN CEPAT (CHIPS) ---
         function renderChips() {
             const container = document.getElementById('chips-container');
-            let html = categories[currentTab].map(cat => 
-                `<button onclick="document.getElementById('input-keterangan').value = '${cat}'" class="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-100 hover:text-indigo-600 transition-colors">${cat}</button>`
-            ).join('');
-            html += `<button onclick="tambahKategori()" class="px-3 py-1.5 rounded-full border border-dashed border-indigo-500 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"><i class="fa-solid fa-plus"></i></button>`;
+            const targetJenis = (jenisTx === 'Hutang') ? 'Pengeluaran' : jenisTx;
+            const currentList = categories[currentTab][targetJenis] || [];
+
+            let html = currentList.map((cat, idx) => {
+                if(isManagingChips) {
+                    return `<div class="flex items-center gap-1 bg-slate-200 dark:bg-slate-700 px-2.5 py-1 rounded-full text-xs font-semibold">
+                        <span>${cat}</span>
+                        <button onclick="editSingleChip(${idx})" class="text-indigo-600 dark:text-indigo-300 ml-1 hover:text-indigo-800"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                        <button onclick="hapusSingleChip(${idx})" class="text-rose-500 hover:text-rose-700"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                    </div>`;
+                } else {
+                    return `<button onclick="document.getElementById('input-keterangan').value = '${cat}'" class="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 hover:text-indigo-600 transition-colors border border-slate-200/60 dark:border-slate-700">${cat}</button>`;
+                }
+            }).join('');
+
+            html += `<button onclick="tambahKategori()" class="px-3 py-1.5 rounded-full border border-dashed border-indigo-500 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors"><i class="fa-solid fa-plus mr-1"></i> Tambah</button>`;
             container.innerHTML = html;
         }
 
+        window.toggleManageChips = function() {
+            isManagingChips = !isManagingChips;
+            renderChips();
+        }
+
         window.tambahKategori = function() {
-            const baru = prompt("Masukkan nama kategori cepat baru:");
+            const baru = prompt("Masukkan nama pilihan cepat baru:");
             if(baru && baru.trim() !== "") {
-                categories[currentTab].push(baru.trim());
-                localStorage.setItem('mulaeCats', JSON.stringify(categories));
+                const targetJenis = (jenisTx === 'Hutang') ? 'Pengeluaran' : jenisTx;
+                categories[currentTab][targetJenis].push(baru.trim());
+                localStorage.setItem('mulaeCatsV2', JSON.stringify(categories));
+                renderChips();
+            }
+        }
+
+        window.editSingleChip = function(idx) {
+            const targetJenis = (jenisTx === 'Hutang') ? 'Pengeluaran' : jenisTx;
+            const namaLama = categories[currentTab][targetJenis][idx];
+            const baru = prompt("Edit nama pilihan cepat:", namaLama);
+            if(baru && baru.trim() !== "") {
+                categories[currentTab][targetJenis][idx] = baru.trim();
+                localStorage.setItem('mulaeCatsV2', JSON.stringify(categories));
+                renderChips();
+            }
+        }
+
+        window.hapusSingleChip = function(idx) {
+            const targetJenis = (jenisTx === 'Hutang') ? 'Pengeluaran' : jenisTx;
+            if(confirm("Hapus pilihan cepat ini?")) {
+                categories[currentTab][targetJenis].splice(idx, 1);
+                localStorage.setItem('mulaeCatsV2', JSON.stringify(categories));
                 renderChips();
             }
         }
@@ -268,7 +412,7 @@
                     currentLocationStr = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
                     document.getElementById('lokasi-status').innerHTML = '<i class="fa-solid fa-location-dot text-emerald-500"></i> Lokasi Tersimpan';
                 }, () => {
-                    document.getElementById('lokasi-status').innerHTML = '<i class="fa-solid fa-circle-exclamation text-rose-500"></i> Akses Ditolak';
+                    document.getElementById('lokasi-status').innerHTML = '<i class="fa-solid fa-circle-exclamation text-rose-500"></i> Ditolak';
                 });
             }
         }
@@ -325,6 +469,9 @@
                 waktu: waktuStr, 
                 bulan: bulanStr,
                 isoWaktu: inputWaktu,
+                tglAngka: dateObj.getDate(),
+                blnAngka: dateObj.getMonth(),
+                thnAngka: dateObj.getFullYear(),
                 entitas: currentTab, 
                 jenis: jenisTx, 
                 sifat: flagSifat,
@@ -345,7 +492,7 @@
                 }
                 batalEdit();
             } catch (e) {
-                alert("Gagal menyimpan data ke server. Pastikan koneksi internet stabil.");
+                alert("Gagal menyimpan ke server.");
             }
             
             document.getElementById('btn-simpan').innerHTML = 'Simpan Transaksi';
@@ -358,15 +505,11 @@
                 document.getElementById('input-nominal').value = tx.nominal;
                 document.getElementById('input-keterangan').value = tx.keterangan;
                 setJenis(tx.jenis);
-                
                 if(tx.sifat) setSifat(tx.sifat);
-
                 editDocId = docId;
                 document.getElementById('btn-batal').classList.remove('hidden');
                 document.getElementById('btn-simpan').innerText = "Perbarui Transaksi";
-                
                 if(tx.isoWaktu) document.getElementById('input-waktu').value = tx.isoWaktu;
-
                 if(tx.foto) {
                     base64FotoAktif = tx.foto;
                     document.getElementById('foto-preview').src = base64FotoAktif;
@@ -389,21 +532,16 @@
         }
 
         window.hapusTx = async function(docId) {
-            if(confirm("Yakin ingin menghapus data ini?")) {
-                try {
-                    await deleteDoc(doc(db, "transactions", docId));
-                } catch (e) {
-                    alert("Gagal menghapus data dari server.");
-                }
+            if(confirm("Hapus data transaksi ini?")) {
+                try { await deleteDoc(doc(db, "transactions", docId)); } catch (e) { alert("Gagal menghapus."); }
             }
         }
 
         window.tandaiLunas = async function(docId) {
             const tx = dataTransaksi.find(t => t.docId === docId);
-            if(tx && confirm("Tandai hutang ini sebagai Lunas?\n(Ini akan otomatis mencatat Pengeluaran)")) {
+            if(tx && confirm("Tandai hutang ini sebagai Lunas?\n(Akan otomatis memotong saldo sebagai Pengeluaran)")) {
                 try {
                     await updateDoc(doc(db, "transactions", docId), { isLunas: true });
-                    
                     const dateObj = new Date();
                     const newTx = {
                         id: Date.now(), 
@@ -411,140 +549,188 @@
                         waktu: dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), 
                         bulan: dateObj.toLocaleString('id-ID', { month: 'long', year: 'numeric' }),
                         isoWaktu: (new Date(dateObj - dateObj.getTimezoneOffset() * 60000)).toISOString().slice(0, 16),
-                        entitas: tx.entitas, 
-                        jenis: 'Pengeluaran', 
-                        sifat: 'Produktif', // Anggap pelunasan hutang sbg produktif
-                        nominal: tx.nominal, 
-                        keterangan: "Pelunasan Hutang: " + tx.keterangan,
+                        tglAngka: dateObj.getDate(), blnAngka: dateObj.getMonth(), thnAngka: dateObj.getFullYear(),
+                        entitas: tx.entitas, jenis: 'Pengeluaran', sifat: 'Produktif', 
+                        nominal: tx.nominal, keterangan: "Pelunasan Hutang: " + tx.keterangan,
                         foto: null, lokasi: null, syncStatus: false, isLunas: false
                     };
                     await addDoc(collection(db, "transactions"), newTx);
-                } catch (e) {
-                    alert("Gagal memproses pelunasan.");
-                }
+                } catch (e) { alert("Gagal memproses pelunasan."); }
             }
         }
 
+        // --- NAVIGASI BULAN KALENDER ---
+        window.gantiBulanKalender = function(delta) {
+            activeCalDate.setMonth(activeCalDate.getMonth() + delta);
+            selectedDayFilter = null;
+            kalkulasiDanRender();
+        }
+
+        window.resetFilterTanggal = function() {
+            selectedDayFilter = null;
+            kalkulasiDanRender();
+        }
+
+        // --- KALKULASI DASBOR & RENDER KALENDER 1x1 ---
         function kalkulasiDanRender() {
-            const listContainer = document.getElementById('history-list');
-            listContainer.innerHTML = '';
-            
-            let grandTotalMasuk = 0; 
-            let grandTotalKeluar = 0; 
-            let grandTotalHutang = 0;
-
-            // Kelompokkan data berdasarkan Bulan
-            const grouped = {};
+            // 1. Dasbor Grand Total Keseluruhan (Tab Aktif)
+            let grandMasuk = 0, grandKeluar = 0, grandHutang = 0;
             dataTransaksi.filter(t => t.entitas === currentTab).forEach(t => {
-                const b = t.bulan || 'Bulan Tidak Diketahui';
-                if(!grouped[b]) grouped[b] = { masuk: 0, keluar: 0, hutang: 0, txs: [] };
-                grouped[b].txs.push(t);
-
-                if(t.jenis === 'Pemasukan') { grouped[b].masuk += t.nominal; grandTotalMasuk += t.nominal; }
-                else if(t.jenis === 'Pengeluaran') { grouped[b].keluar += t.nominal; grandTotalKeluar += t.nominal; }
-                else if(t.jenis === 'Hutang' && !t.isLunas) { grouped[b].hutang += t.nominal; grandTotalHutang += t.nominal; }
+                if(t.jenis === 'Pemasukan') grandMasuk += t.nominal;
+                else if(t.jenis === 'Pengeluaran') grandKeluar += t.nominal;
+                else if(t.jenis === 'Hutang' && !t.isLunas) grandHutang += t.nominal;
             });
 
-            // Update Dasbor Grand Total
-            document.getElementById('total-masuk').innerText = 'Rp' + formatRupiah(grandTotalMasuk);
-            document.getElementById('total-keluar').innerText = 'Rp' + formatRupiah(grandTotalKeluar);
-            document.getElementById('sisa-saldo').innerText = 'Rp' + formatRupiah(grandTotalMasuk - grandTotalKeluar);
-            document.getElementById('total-hutang').innerText = 'Rp' + formatRupiah(grandTotalHutang);
+            document.getElementById('total-masuk').innerText = 'Rp' + formatRupiah(grandMasuk);
+            document.getElementById('total-keluar').innerText = 'Rp' + formatRupiah(grandKeluar);
+            document.getElementById('sisa-saldo').innerText = 'Rp' + formatRupiah(grandMasuk - grandKeluar);
+            document.getElementById('total-hutang').innerText = 'Rp' + formatRupiah(grandHutang);
 
-            // Urutkan Bulan (Berdasarkan transaksi terbaru di dalamnya)
-            const sortedMonths = Object.keys(grouped).sort((a, b) => {
-                return grouped[b].txs[0].id - grouped[a].txs[0].id;
-            });
+            // 2. Render Header Bulan Kalender
+            const monthName = activeCalDate.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+            document.getElementById('cal-month-title').innerText = monthName;
 
-            // Render setiap bulan
-            sortedMonths.forEach(bulan => {
-                const g = grouped[bulan];
-                const laba = g.masuk - g.keluar;
+            const targetYear = activeCalDate.getFullYear();
+            const targetMonth = activeCalDate.getMonth();
 
-                // Header dan Kesimpulan Bulan
-                let summaryHtml = `
-                    <div class="mt-8 mb-3 bg-indigo-50 dark:bg-slate-800 rounded-xl border border-indigo-100 dark:border-slate-700 overflow-hidden shadow-sm fade-in">
-                        <div class="bg-indigo-100 dark:bg-slate-700 px-4 py-2">
-                            <h3 class="font-black text-indigo-900 dark:text-indigo-200 uppercase tracking-widest text-sm">${bulan}</h3>
-                        </div>
-                        <div class="p-4 flex flex-col gap-2">
-                            <div class="flex justify-between text-sm font-semibold">
-                                <span class="text-slate-600 dark:text-slate-400">Total Masuk:</span>
-                                <span class="text-emerald-600">+ Rp${formatRupiah(g.masuk)}</span>
-                            </div>
-                            <div class="flex justify-between text-sm font-semibold">
-                                <span class="text-slate-600 dark:text-slate-400">Total Keluar:</span>
-                                <span class="text-rose-600">- Rp${formatRupiah(g.keluar)}</span>
-                            </div>
-                `;
-
-                if (currentTab === 'Bisnis' || currentTab === 'Pribadi') {
-                    const profitClass = laba < 0 ? 'text-rose-600' : 'text-emerald-600';
-                    summaryHtml += `
-                            <div class="border-t border-indigo-200 dark:border-slate-600 mt-2 pt-2 text-sm font-black flex justify-between">
-                                <span>${currentTab === 'Bisnis' ? 'Laba Bersih' : 'Sisa Bulan Ini'}:</span> 
-                                <span class="${profitClass}">Rp${formatRupiah(laba)}</span>
-                            </div>`;
+            // Filter data khusus Bulan & Entitas ini
+            const dataBulanIni = dataTransaksi.filter(t => {
+                if(t.entitas !== currentTab) return false;
+                if(t.thnAngka !== undefined && t.blnAngka !== undefined) {
+                    return t.thnAngka === targetYear && t.blnAngka === targetMonth;
                 }
-                summaryHtml += `</div></div> <div class="space-y-3 pl-1 border-l-2 border-indigo-100 dark:border-slate-700 ml-2">`;
-                listContainer.innerHTML += summaryHtml;
-
-                // Render Transaksi di dalam bulan tersebut
-                g.txs.forEach(t => {
-                    let iconColor, iconPath, nominalColor, prefix;
-                    
-                    if(t.jenis === 'Pemasukan') {
-                        iconColor = 'text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30'; iconPath = 'fa-arrow-down'; nominalColor = 'text-emerald-600 dark:text-emerald-400'; prefix = '+';
-                    } else if(t.jenis === 'Pengeluaran') {
-                        iconColor = 'text-rose-500 bg-rose-100 dark:bg-rose-900/30'; iconPath = 'fa-arrow-up'; nominalColor = 'text-slate-800 dark:text-slate-200'; prefix = '-';
-                    } else { 
-                        iconColor = 'text-amber-500 bg-amber-100 dark:bg-amber-900/30'; iconPath = 'fa-hand-holding-dollar'; 
-                        nominalColor = t.isLunas ? 'text-slate-400 line-through' : 'text-amber-600 dark:text-amber-400'; prefix = '';
-                    }
-
-                    const fotoHtml = t.foto ? `<img src="${t.foto}" class="mt-2 w-14 h-14 object-cover rounded border border-slate-200 shadow-sm cursor-pointer hover:scale-150 origin-left transition-transform">` : '';
-                    const locHtml = t.lokasi ? `<a href="${t.lokasi}" target="_blank" class="text-indigo-500 ml-2 hover:underline"><i class="fa-solid fa-map-pin"></i></a>` : '';
-                    
-                    let lunasBtn = (t.jenis === 'Hutang' && !t.isLunas) ? `<button onclick="tandaiLunas('${t.docId}')" class="text-[10px] bg-amber-500 text-white px-2 py-1 rounded hover:bg-amber-600">LUNAS</button>` : '';
-                    if(t.isLunas) lunasBtn = `<span class="text-[10px] bg-slate-200 text-slate-500 px-2 py-1 rounded">LUNAS</span>`;
-
-                    // Lencana Tag Sifat Pengeluaran
-                    let sifatBadge = '';
-                    if(t.sifat === 'Produktif') sifatBadge = `<span class="text-[9px] bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded border border-indigo-200 ml-2 font-bold uppercase">💡 Produktif</span>`;
-                    if(t.sifat === 'Self-Reward') sifatBadge = `<span class="text-[9px] bg-fuchsia-100 text-fuchsia-600 px-1.5 py-0.5 rounded border border-fuchsia-200 ml-2 font-bold uppercase">🎉 Self-Reward</span>`;
-
-                    listContainer.innerHTML += `
-                        <div class="glass-card p-4 flex gap-3 items-start fade-in relative">
-                            <div class="p-2 rounded-full flex-shrink-0 ${iconColor} mt-1"><i class="fa-solid ${iconPath} text-xs"></i></div>
-                            <div class="flex-1 min-w-0">
-                                <p class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate flex items-center">${t.keterangan} ${sifatBadge}</p>
-                                <p class="text-[11px] text-slate-500 mt-0.5">${t.tanggal} • ${t.waktu} ${locHtml}</p>
-                                ${fotoHtml}
-                                <div class="flex gap-2 mt-2">
-                                    ${lunasBtn}
-                                    <button onclick="editTx('${t.docId}')" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded"><i class="fa-solid fa-pen"></i></button>
-                                    <button onclick="hapusTx('${t.docId}')" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-rose-500 px-2 py-1 rounded"><i class="fa-solid fa-trash"></i></button>
-                                </div>
-                            </div>
-                            <div class="font-bold text-sm whitespace-nowrap ${nominalColor} pt-1">${prefix}Rp${formatRupiah(t.nominal)}</div>
-                        </div>
-                    `;
-                });
-                
-                listContainer.innerHTML += `</div>`; // Tutup pemisah bulan
+                return t.bulan === monthName; // fallback string
             });
+
+            // Rekap Bulanan
+            let calMasuk = 0, calKeluar = 0;
+            dataBulanIni.forEach(t => {
+                if(t.jenis === 'Pemasukan') calMasuk += t.nominal;
+                else if(t.jenis === 'Pengeluaran') calKeluar += t.nominal;
+            });
+
+            document.getElementById('cal-rekap-masuk').innerText = 'Rp' + formatRupiah(calMasuk);
+            document.getElementById('cal-rekap-keluar').innerText = 'Rp' + formatRupiah(calKeluar);
+            const labaBulan = calMasuk - calKeluar;
+            document.getElementById('cal-rekap-laba').innerText = 'Rp' + formatRupiah(labaBulan);
+            document.getElementById('cal-rekap-laba').className = labaBulan < 0 ? 'text-rose-600 font-bold' : 'text-indigo-600 dark:text-indigo-400 font-bold';
+
+            // 3. Render Grid 1x1 Tanggal Kalender
+            const tilesContainer = document.getElementById('calendar-tiles');
+            tilesContainer.innerHTML = '';
+
+            const firstDayIndex = new Date(targetYear, targetMonth, 1).getDay();
+            const totalDaysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+
+            // Slot kosong sebelum tanggal 1
+            for(let i = 0; i < firstDayIndex; i++) {
+                tilesContainer.innerHTML += `<div class="day-tile opacity-0 pointer-events-none"></div>`;
+            }
+
+            // Petakan transaksi ke tanggal
+            const txCountPerDay = {};
+            dataBulanIni.forEach(t => {
+                const dayNum = t.tglAngka || parseInt(t.tanggal);
+                if(dayNum) txCountPerDay[dayNum] = (txCountPerDay[dayNum] || 0) + 1;
+            });
+
+            const today = new Date();
+            const isCurrentMonthNow = (today.getFullYear() === targetYear && today.getMonth() === targetMonth);
+
+            for(let day = 1; day <= totalDaysInMonth; day++) {
+                const hasTx = txCountPerDay[day];
+                const isSelected = selectedDayFilter === day;
+                const isToday = isCurrentMonthNow && today.getDate() === day;
+
+                let tileClass = "bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-indigo-100";
+                if(isSelected) tileClass = "bg-indigo-600 text-white font-black shadow-md ring-2 ring-indigo-400";
+                else if(isToday) tileClass = "border-2 border-indigo-500 text-indigo-600 dark:text-indigo-300 font-bold";
+
+                const dotBadge = hasTx ? `<span class="w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-500'} absolute bottom-1"></span>` : '';
+
+                tilesContainer.innerHTML += `
+                    <div onclick="pilihTanggal(${day})" class="day-tile ${tileClass}">
+                        <span>${day}</span>
+                        ${dotBadge}
+                    </div>
+                `;
+            }
+
+            // 4. Render Daftar Detail Transaksi (Filtered by selected day / whole month)
+            const listDetail = document.getElementById('history-list-detail');
+            listDetail.innerHTML = '';
+
+            let dataFiltered = dataBulanIni;
+            if(selectedDayFilter !== null) {
+                document.getElementById('selected-date-label').innerText = `Transaksi Tanggal ${selectedDayFilter} ${monthName}`;
+                document.getElementById('btn-reset-filter').classList.remove('hidden');
+                dataFiltered = dataBulanIni.filter(t => (t.tglAngka || parseInt(t.tanggal)) === selectedDayFilter);
+            } else {
+                document.getElementById('selected-date-label').innerText = `Semua Transaksi (${monthName})`;
+                document.getElementById('btn-reset-filter').classList.add('hidden');
+            }
+
+            if(dataFiltered.length === 0) {
+                listDetail.innerHTML = `<p class="text-xs text-center py-4 font-semibold text-slate-400">Tidak ada transaksi pada periode ini.</p>`;
+                return;
+            }
+
+            dataFiltered.forEach(t => {
+                let iconColor, iconPath, nominalColor, prefix;
+                if(t.jenis === 'Pemasukan') {
+                    iconColor = 'text-emerald-500 bg-emerald-100 dark:bg-emerald-950/40'; iconPath = 'fa-arrow-down'; nominalColor = 'text-emerald-600 dark:text-emerald-400'; prefix = '+';
+                } else if(t.jenis === 'Pengeluaran') {
+                    iconColor = 'text-rose-500 bg-rose-100 dark:bg-rose-950/40'; iconPath = 'fa-arrow-up'; nominalColor = 'text-slate-900 dark:text-slate-100'; prefix = '-';
+                } else { 
+                    iconColor = 'text-amber-500 bg-amber-100 dark:bg-amber-950/40'; iconPath = 'fa-hand-holding-dollar'; 
+                    nominalColor = t.isLunas ? 'text-slate-400 line-through' : 'text-amber-600 dark:text-amber-400'; prefix = '';
+                }
+
+                const fotoHtml = t.foto ? `<img src="${t.foto}" class="mt-2 w-14 h-14 object-cover rounded-lg border border-slate-200 shadow-sm cursor-pointer hover:scale-150 origin-left transition-transform">` : '';
+                const locHtml = t.lokasi ? `<a href="${t.lokasi}" target="_blank" class="text-indigo-500 ml-1.5 hover:underline"><i class="fa-solid fa-map-pin"></i></a>` : '';
+                
+                let lunasBtn = (t.jenis === 'Hutang' && !t.isLunas) ? `<button onclick="tandaiLunas('${t.docId}')" class="text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded font-bold hover:bg-amber-600">LUNAS</button>` : '';
+                if(t.isLunas) lunasBtn = `<span class="text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-500 px-2 py-0.5 rounded font-bold">LUNAS</span>`;
+
+                let sifatBadge = '';
+                if(t.sifat === 'Produktif') sifatBadge = `<span class="text-[9px] bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-300 px-1.5 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 ml-1.5 font-bold">💡 Produktif</span>`;
+                if(t.sifat === 'Self-Reward') sifatBadge = `<span class="text-[9px] bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/60 dark:text-fuchsia-300 px-1.5 py-0.5 rounded border border-fuchsia-200 dark:border-fuchsia-800 ml-1.5 font-bold">🎉 Self-Reward</span>`;
+
+                listDetail.innerHTML += `
+                    <div class="glass-card p-3 flex gap-3 items-start fade-in">
+                        <div class="p-2 rounded-full flex-shrink-0 ${iconColor} mt-0.5"><i class="fa-solid ${iconPath} text-xs"></i></div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-xs text-slate-900 dark:text-slate-100 truncate flex items-center">${t.keterangan} ${sifatBadge}</p>
+                            <p class="text-[10px] text-slate-500 font-medium mt-0.5">${t.tanggal} • ${t.waktu} ${locHtml}</p>
+                            ${fotoHtml}
+                            <div class="flex gap-1.5 mt-2">
+                                ${lunasBtn}
+                                <button onclick="editTx('${t.docId}')" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded font-semibold"><i class="fa-solid fa-pen"></i> Edit</button>
+                                <button onclick="hapusTx('${t.docId}')" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-rose-500 px-2 py-0.5 rounded font-semibold"><i class="fa-solid fa-trash"></i> Hapus</button>
+                            </div>
+                        </div>
+                        <div class="font-extrabold text-xs whitespace-nowrap ${nominalColor} pt-0.5">${prefix}Rp${formatRupiah(t.nominal)}</div>
+                    </div>
+                `;
+            });
+        }
+
+        window.pilihTanggal = function(day) {
+            if(selectedDayFilter === day) selectedDayFilter = null;
+            else selectedDayFilter = day;
+            kalkulasiDanRender();
         }
 
         window.syncToSheets = async function() {
             const unsynced = dataTransaksi.filter(t => !t.syncStatus);
-            if (unsynced.length === 0) return alert("Semua data sudah tersinkronisasi ke Sheets.");
+            if (unsynced.length === 0) return alert("Semua data sudah tersinkronisasi ke Google Sheets.");
             
             const status = document.getElementById('sync-status');
             status.classList.remove('hidden');
-            status.className = "text-xs mt-2 font-medium text-indigo-500 block";
+            status.className = "text-xs mt-1.5 font-semibold text-indigo-600 block";
             status.innerText = "Mengirim " + unsynced.length + " data...";
 
-            if(GOOGLE_APP_SCRIPT_URL === "URL_APPS_SCRIPT_ANDA_DISINI") return alert("URL Google Apps Script belum dimasukkan.");
+            if(GOOGLE_APP_SCRIPT_URL === "URL_APPS_SCRIPT_ANDA_DISINI") return alert("URL Google Apps Script belum diisi.");
 
             try {
                 const safePayload = unsynced.map(t => ({
@@ -561,22 +747,21 @@
                 
                 if (response.ok) {
                     for(let t of unsynced) { await updateDoc(doc(db, "transactions", t.docId), { syncStatus: true }); }
-                    status.className = "text-xs mt-2 font-medium text-emerald-500 block";
+                    status.className = "text-xs mt-1.5 font-semibold text-emerald-600 block";
                     status.innerText = "Selesai menyinkronkan!";
                     setTimeout(() => status.classList.add('hidden'), 2500);
                 }
             } catch (error) {
-                status.className = "text-xs mt-2 font-medium text-rose-500 block";
+                status.className = "text-xs mt-1.5 font-semibold text-rose-600 block";
                 status.innerText = "Error koneksi internet.";
             }
         }
 
-        // Init Setup
-        renderChips();
+        // Inisialisasi awal
         setWaktuSekarang();
+        setJenis('Pengeluaran');
         switchTab('Pribadi');
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
-
     </script>
 </body>
 </html>
