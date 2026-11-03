@@ -7,48 +7,25 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            -webkit-font-smoothing: antialiased;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
         .theme-transition { transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
         
         .glass-card {
-            background: rgba(255, 255, 255, 1);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            border-radius: 16px;
+            background: rgba(255, 255, 255, 1); border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); border-radius: 16px;
         }
-        .dark .glass-card {
-            background: rgba(30, 41, 59, 1);
-            border: 1px solid rgba(51, 65, 85, 0.8);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-        }
+        .dark .glass-card { background: rgba(30, 41, 59, 1); border: 1px solid rgba(51, 65, 85, 0.8); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); }
 
-        .segmented-control {
-            background-color: #f1f5f9;
-            border-radius: 12px;
-            padding: 4px;
-        }
+        .segmented-control { background-color: #f1f5f9; border-radius: 12px; padding: 4px; }
         .dark .segmented-control { background-color: #0f172a; }
         
-        .tab-active {
-            background-color: #ffffff;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            color: #0f172a;
-        }
-        .dark .tab-active {
-            background-color: #1e293b;
-            color: #f8fafc;
-        }
+        .tab-active { background-color: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); color: #0f172a; }
+        .dark .tab-active { background-color: #1e293b; color: #f8fafc; }
         .tab-inactive { color: #64748b; }
         .dark .tab-inactive { color: #94a3b8; }
 
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn {
-            0% { opacity: 0; transform: translateY(10px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeIn { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 theme-transition pb-24 min-h-screen">
@@ -57,9 +34,12 @@
         <!-- Header -->
         <div class="flex justify-between items-center mb-4">
             <h1 class="text-xl font-semibold tracking-tight"><i class="fa-solid fa-wallet text-indigo-500 mr-2"></i>Buku Kas</h1>
-            <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-500 dark:text-slate-400">
-                <i class="fa-solid fa-circle-half-stroke text-lg"></i>
-            </button>
+            <div class="flex items-center gap-2">
+                <span id="koneksi-status" class="text-[10px] font-bold px-2 py-1 rounded bg-amber-100 text-amber-600"><i class="fa-solid fa-spinner fa-spin"></i> Menghubungkan...</span>
+                <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-500 dark:text-slate-400">
+                    <i class="fa-solid fa-circle-half-stroke text-lg"></i>
+                </button>
+            </div>
         </div>
 
         <!-- Segmented Tab Control -->
@@ -122,7 +102,6 @@
 
             <div class="space-y-4">
                 
-                <!-- Input Tanggal & Jam Otomatis -->
                 <div class="relative">
                     <span class="absolute left-4 top-3.5 text-slate-400 font-semibold"><i class="fa-solid fa-clock"></i></span>
                     <input type="datetime-local" id="input-waktu" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 pl-10 pr-4 font-semibold text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow text-slate-600 dark:text-slate-300">
@@ -177,45 +156,79 @@
         <div class="space-y-3 pt-2" id="history-list"></div>
     </div>
 
-    <script>
+    <!-- SCRIPT TYPE MODULE UNTUK FIREBASE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Konfigurasi Firebase Anda
+        const firebaseConfig = {
+            apiKey: "AIzaSyCE9jIpz-iM2gy6N-0CrtXcca7SeA-2ZRg",
+            authDomain: "keuangan-fea39.firebaseapp.com",
+            projectId: "keuangan-fea39",
+            storageBucket: "keuangan-fea39.firebasestorage.app",
+            messagingSenderId: "35986050008",
+            appId: "1:35986050008:web:4d2d33c9af9772044100ad"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // URL Google Apps Script tetap di sini
         const GOOGLE_APP_SCRIPT_URL = "URL_APPS_SCRIPT_ANDA_DISINI";
 
         let currentTab = 'Pribadi';
         let jenisTx = 'Pengeluaran';
-        let dataTransaksi = JSON.parse(localStorage.getItem('mulaeKasData')) || [];
+        let dataTransaksi = [];
         let base64FotoAktif = null;
-        let editId = null;
+        let editDocId = null;
         let currentLocationStr = null;
 
-        // Kategori Dinamis
         let categories = JSON.parse(localStorage.getItem('mulaeCats')) || {
             Pribadi: ['Makan', 'Bensin', 'Topup', 'Tagihan'],
             Bisnis: ['Sewa Alat', 'Transport', 'Honor', 'DP Klien']
         };
 
-        function setWaktuSekarang() {
+        // --- FIREBASE REALTIME LISTENER ---
+        const q = query(collection(db, "transactions"), orderBy("id", "desc"));
+        onSnapshot(q, (snapshot) => {
+            dataTransaksi = [];
+            snapshot.forEach((doc) => {
+                dataTransaksi.push({ ...doc.data(), docId: doc.id });
+            });
+            
+            document.getElementById('koneksi-status').className = "text-[10px] font-bold px-2 py-1 rounded bg-emerald-100 text-emerald-600";
+            document.getElementById('koneksi-status').innerHTML = '<i class="fa-solid fa-cloud-check"></i> Tersinkronisasi';
+            
+            kalkulasiDanRender();
+        }, (error) => {
+            document.getElementById('koneksi-status').className = "text-[10px] font-bold px-2 py-1 rounded bg-rose-100 text-rose-600";
+            document.getElementById('koneksi-status').innerHTML = '<i class="fa-solid fa-cloud-xmark"></i> Offline';
+        });
+
+        // --- FUNGSI-FUNGSI UTAMA (Diekspos ke window agar HTML bisa memanggilnya) ---
+        
+        window.setWaktuSekarang = function() {
             const now = new Date();
-            // Menyesuaikan zona waktu lokal agar format ISO string sesuai dengan jam saat ini
             const tzOffset = now.getTimezoneOffset() * 60000;
             const localISOTime = (new Date(now - tzOffset)).toISOString().slice(0, 16);
             document.getElementById('input-waktu').value = localISOTime;
         }
 
-        function toggleTheme() {
+        window.toggleTheme = function() {
             document.documentElement.classList.toggle('dark');
         }
 
-        function switchTab(tab) {
+        window.switchTab = function(tab) {
             currentTab = tab;
             document.getElementById('btn-pribadi').className = tab === 'Pribadi' ? "flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-active" : "flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-inactive";
             document.getElementById('btn-bisnis').className = tab === 'Bisnis' ? "flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-active" : "flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-inactive";
-            
             document.getElementById('panel-laba-rugi').classList.toggle('hidden', tab !== 'Bisnis');
             renderChips();
             kalkulasiDanRender();
         }
 
-        function setJenis(jenis) {
+        window.setJenis = function(jenis) {
             jenisTx = jenis;
             document.getElementById('btn-keluar').className = jenis === 'Pengeluaran' ? "flex-1 py-2 text-xs font-semibold rounded-lg transition-all tab-active text-rose-600 dark:text-rose-400" : "flex-1 py-2 text-xs font-semibold rounded-lg transition-all tab-inactive";
             document.getElementById('btn-masuk').className = jenis === 'Pemasukan' ? "flex-1 py-2 text-xs font-semibold rounded-lg transition-all tab-active text-emerald-600 dark:text-emerald-400" : "flex-1 py-2 text-xs font-semibold rounded-lg transition-all tab-inactive";
@@ -231,7 +244,7 @@
             container.innerHTML = html;
         }
 
-        function tambahKategori() {
+        window.tambahKategori = function() {
             const baru = prompt("Masukkan nama kategori cepat baru:");
             if(baru && baru.trim() !== "") {
                 categories[currentTab].push(baru.trim());
@@ -244,7 +257,7 @@
             return new Intl.NumberFormat('id-ID').format(angka);
         }
 
-        function mintaLokasi() {
+        window.mintaLokasi = function() {
             if(navigator.geolocation) {
                 document.getElementById('lokasi-status').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mencari...';
                 navigator.geolocation.getCurrentPosition(pos => {
@@ -256,7 +269,7 @@
             }
         }
 
-        function previewAndCompressFoto(event) {
+        window.previewAndCompressFoto = function(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
@@ -280,87 +293,69 @@
             reader.readAsDataURL(file);
         }
 
-        function hapusFoto() {
+        window.hapusFoto = function() {
             base64FotoAktif = null;
             document.getElementById('input-foto').value = '';
             document.getElementById('foto-preview-container').classList.add('hidden');
         }
 
-        function simpanTransaksi() {
+        window.simpanTransaksi = async function() {
             const nominal = parseInt(document.getElementById('input-nominal').value);
             const keterangan = document.getElementById('input-keterangan').value;
             const inputWaktu = document.getElementById('input-waktu').value;
             
             if(!nominal || !keterangan) return alert('Mohon isi nominal dan keterangan.');
 
-            // Mengambil jam & tanggal dari form input, bukan hanya dari sistem
+            document.getElementById('btn-simpan').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+            document.getElementById('btn-simpan').disabled = true;
+
             const dateObj = inputWaktu ? new Date(inputWaktu) : new Date();
-            
             const bulanStr = dateObj.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
             const tanggalStr = dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
             const waktuStr = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
-            if (editId) {
-                const idx = dataTransaksi.findIndex(t => t.id === editId);
-                if(idx !== -1) {
-                    dataTransaksi[idx].nominal = nominal;
-                    dataTransaksi[idx].keterangan = keterangan;
-                    dataTransaksi[idx].jenis = jenisTx;
-                    
-                    dataTransaksi[idx].tanggal = tanggalStr;
-                    dataTransaksi[idx].waktu = waktuStr;
-                    dataTransaksi[idx].bulan = bulanStr;
-                    dataTransaksi[idx].isoWaktu = inputWaktu;
-
-                    if(base64FotoAktif) dataTransaksi[idx].foto = base64FotoAktif;
-                    if(currentLocationStr) dataTransaksi[idx].lokasi = currentLocationStr;
-                    dataTransaksi[idx].syncStatus = false;
-                }
-            } else {
-                const newTx = {
-                    id: Date.now(), 
-                    tanggal: tanggalStr, 
-                    waktu: waktuStr, 
-                    bulan: bulanStr,
-                    isoWaktu: inputWaktu,
-                    entitas: currentTab, 
-                    jenis: jenisTx, 
-                    nominal: nominal, 
-                    keterangan: keterangan,
-                    foto: base64FotoAktif, 
-                    lokasi: currentLocationStr, 
-                    syncStatus: false, 
-                    isLunas: false
-                };
-                dataTransaksi.unshift(newTx);
-            }
+            const txData = {
+                tanggal: tanggalStr, 
+                waktu: waktuStr, 
+                bulan: bulanStr,
+                isoWaktu: inputWaktu,
+                entitas: currentTab, 
+                jenis: jenisTx, 
+                nominal: nominal, 
+                keterangan: keterangan,
+                foto: base64FotoAktif, 
+                lokasi: currentLocationStr, 
+                syncStatus: false
+            };
 
             try {
-                localStorage.setItem('mulaeKasData', JSON.stringify(dataTransaksi));
+                if (editDocId) {
+                    await updateDoc(doc(db, "transactions", editDocId), txData);
+                } else {
+                    txData.id = Date.now();
+                    txData.isLunas = false;
+                    await addDoc(collection(db, "transactions"), txData);
+                }
+                batalEdit();
             } catch (e) {
-                alert("Memori Browser penuh. Mohon hapus foto pada transaksi lama.");
-                if(!editId) dataTransaksi.shift();
-                return;
+                alert("Gagal menyimpan data ke server. Pastikan koneksi internet stabil.");
             }
             
-            batalEdit();
-            kalkulasiDanRender();
+            document.getElementById('btn-simpan').innerHTML = 'Simpan Transaksi';
+            document.getElementById('btn-simpan').disabled = false;
         }
 
-        function editTx(id) {
-            const tx = dataTransaksi.find(t => t.id === id);
+        window.editTx = function(docId) {
+            const tx = dataTransaksi.find(t => t.docId === docId);
             if(tx) {
                 document.getElementById('input-nominal').value = tx.nominal;
                 document.getElementById('input-keterangan').value = tx.keterangan;
                 setJenis(tx.jenis);
-                editId = id;
+                editDocId = docId;
                 document.getElementById('btn-batal').classList.remove('hidden');
                 document.getElementById('btn-simpan').innerText = "Perbarui Transaksi";
                 
-                // Isi kembali form jam sesuai data yang diedit
-                if(tx.isoWaktu) {
-                    document.getElementById('input-waktu').value = tx.isoWaktu;
-                }
+                if(tx.isoWaktu) document.getElementById('input-waktu').value = tx.isoWaktu;
 
                 if(tx.foto) {
                     base64FotoAktif = tx.foto;
@@ -371,47 +366,52 @@
             }
         }
 
-        function batalEdit() {
-            editId = null;
+        window.batalEdit = function() {
+            editDocId = null;
             document.getElementById('input-nominal').value = '';
             document.getElementById('input-keterangan').value = '';
             document.getElementById('btn-batal').classList.add('hidden');
             document.getElementById('btn-simpan').innerText = "Simpan Transaksi";
             hapusFoto();
             setJenis('Pengeluaran');
-            setWaktuSekarang(); // Reset form jam ke waktu saat ini
+            setWaktuSekarang();
         }
 
-        function hapusTx(id) {
+        window.hapusTx = async function(docId) {
             if(confirm("Yakin ingin menghapus data ini?")) {
-                dataTransaksi = dataTransaksi.filter(t => t.id !== id);
-                localStorage.setItem('mulaeKasData', JSON.stringify(dataTransaksi));
-                kalkulasiDanRender();
+                try {
+                    await deleteDoc(doc(db, "transactions", docId));
+                } catch (e) {
+                    alert("Gagal menghapus data dari server.");
+                }
             }
         }
 
-        function tandaiLunas(id) {
-            const idx = dataTransaksi.findIndex(t => t.id === id);
-            if(idx !== -1 && confirm("Tandai hutang ini sebagai Lunas?\n(Ini akan otomatis memotong saldo sebagai Pengeluaran)")) {
-                dataTransaksi[idx].isLunas = true;
-                
-                // Otomatis mencatat pengeluaran uang untuk pelunasan
-                const dateObj = new Date();
-                const newTx = {
-                    id: Date.now(), 
-                    tanggal: dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }), 
-                    waktu: dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), 
-                    bulan: dateObj.toLocaleString('id-ID', { month: 'long', year: 'numeric' }),
-                    isoWaktu: (new Date(dateObj - dateObj.getTimezoneOffset() * 60000)).toISOString().slice(0, 16),
-                    entitas: dataTransaksi[idx].entitas, 
-                    jenis: 'Pengeluaran', 
-                    nominal: dataTransaksi[idx].nominal, 
-                    keterangan: "Pelunasan Hutang: " + dataTransaksi[idx].keterangan,
-                    foto: null, lokasi: null, syncStatus: false, isLunas: false
-                };
-                dataTransaksi.unshift(newTx);
-                localStorage.setItem('mulaeKasData', JSON.stringify(dataTransaksi));
-                kalkulasiDanRender();
+        window.tandaiLunas = async function(docId) {
+            const tx = dataTransaksi.find(t => t.docId === docId);
+            if(tx && confirm("Tandai hutang ini sebagai Lunas?\n(Ini akan otomatis mencatat Pengeluaran)")) {
+                try {
+                    // Update status lunas
+                    await updateDoc(doc(db, "transactions", docId), { isLunas: true });
+                    
+                    // Otomatis catat pengeluaran
+                    const dateObj = new Date();
+                    const newTx = {
+                        id: Date.now(), 
+                        tanggal: dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }), 
+                        waktu: dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), 
+                        bulan: dateObj.toLocaleString('id-ID', { month: 'long', year: 'numeric' }),
+                        isoWaktu: (new Date(dateObj - dateObj.getTimezoneOffset() * 60000)).toISOString().slice(0, 16),
+                        entitas: tx.entitas, 
+                        jenis: 'Pengeluaran', 
+                        nominal: tx.nominal, 
+                        keterangan: "Pelunasan Hutang: " + tx.keterangan,
+                        foto: null, lokasi: null, syncStatus: false, isLunas: false
+                    };
+                    await addDoc(collection(db, "transactions"), newTx);
+                } catch (e) {
+                    alert("Gagal memproses pelunasan.");
+                }
             }
         }
 
@@ -444,7 +444,7 @@
                 const fotoHtml = t.foto ? `<img src="${t.foto}" class="mt-2 w-14 h-14 object-cover rounded border border-slate-200 shadow-sm cursor-pointer hover:scale-150 origin-left transition-transform">` : '';
                 const locHtml = t.lokasi ? `<a href="${t.lokasi}" target="_blank" class="text-indigo-500 ml-2 hover:underline"><i class="fa-solid fa-map-pin"></i></a>` : '';
                 
-                let lunasBtn = (t.jenis === 'Hutang' && !t.isLunas) ? `<button onclick="tandaiLunas(${t.id})" class="text-[10px] bg-amber-500 text-white px-2 py-1 rounded hover:bg-amber-600">LUNAS</button>` : '';
+                let lunasBtn = (t.jenis === 'Hutang' && !t.isLunas) ? `<button onclick="tandaiLunas('${t.docId}')" class="text-[10px] bg-amber-500 text-white px-2 py-1 rounded hover:bg-amber-600">LUNAS</button>` : '';
                 if(t.isLunas) lunasBtn = `<span class="text-[10px] bg-slate-200 text-slate-500 px-2 py-1 rounded">LUNAS</span>`;
 
                 listContainer.innerHTML += `
@@ -456,8 +456,8 @@
                             ${fotoHtml}
                             <div class="flex gap-2 mt-2">
                                 ${lunasBtn}
-                                <button onclick="editTx(${t.id})" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="hapusTx(${t.id})" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-rose-500 px-2 py-1 rounded"><i class="fa-solid fa-trash"></i></button>
+                                <button onclick="editTx('${t.docId}')" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="hapusTx('${t.docId}')" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-rose-500 px-2 py-1 rounded"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
                         <div class="font-bold text-sm whitespace-nowrap ${nominalColor}">${prefix}Rp${formatRupiah(t.nominal)}</div>
@@ -479,9 +479,10 @@
             }
         }
 
-        async function syncToSheets() {
+        window.syncToSheets = async function() {
             const unsynced = dataTransaksi.filter(t => !t.syncStatus);
             if (unsynced.length === 0) return alert("Semua data sudah tersinkronisasi ke Sheets.");
+            
             const status = document.getElementById('sync-status');
             status.classList.remove('hidden');
             status.className = "text-xs mt-2 font-medium text-indigo-500 block";
@@ -502,8 +503,10 @@
                 });
                 
                 if (response.ok) {
-                    dataTransaksi = dataTransaksi.map(t => ({ ...t, syncStatus: true }));
-                    localStorage.setItem('mulaeKasData', JSON.stringify(dataTransaksi));
+                    // Update status sync di Firestore satu per satu
+                    for(let t of unsynced) {
+                        await updateDoc(doc(db, "transactions", t.docId), { syncStatus: true });
+                    }
                     status.className = "text-xs mt-2 font-medium text-emerald-500 block";
                     status.innerText = "Selesai menyinkronkan!";
                     setTimeout(() => status.classList.add('hidden'), 2500);
@@ -516,9 +519,10 @@
 
         // Init Setup
         renderChips();
-        setWaktuSekarang(); // Menjalankan fungsi jam otomatis saat web dibuka
+        setWaktuSekarang();
         switchTab('Pribadi');
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
+
     </script>
 </body>
 </html>
