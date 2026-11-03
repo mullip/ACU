@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kas Mulae.Production</title>
     
-    <!-- PWA & Web Thumbnail / Favicon -->
-    <link rel="icon" type="image/png" href="icon.png">
-    <link rel="apple-touch-icon" href="icon.png">
+    <!-- PWA Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='128' fill='%23053c29'/><path d='M120 370V140h45l75 125 75-125h45v230h-45V220l-75 125-75-125v150z' fill='%23ffffff'/><rect x='340' y='270' width='30' height='100' rx='6' fill='%2334d399'/><rect x='290' y='300' width='30' height='70' rx='6' fill='%2310b981'/><rect x='240' y='330' width='30' height='40' rx='6' fill='%23059669'/></svg>">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -41,7 +40,7 @@
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
         .day-tile {
             aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            border-radius: 10px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; relative;
+            border-radius: 10px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; position: relative;
         }
     </style>
 </head>
@@ -50,10 +49,37 @@
     <!-- OVERLAY 1: FIREBASE AUTH LOGIN MODAL -->
     <div id="auth-overlay" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="glass-card w-full max-w-sm p-6 space-y-4 text-center">
-            <img src="icon.png" alt="Mulae Icon" class="w-16 h-16 mx-auto rounded-2xl shadow-md" onerror="this.src='https://via.placeholder.com/64?text=M'">
+            
+            <!-- Logo Mulae.Production (SVG Embedded) -->
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-950 p-2 shadow-lg flex items-center justify-center border border-emerald-600/30">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-full h-full">
+                    <path d="M100 380V130h50l80 135 80-135h50v250h-50V210l-80 135-80-135v170z" fill="#ffffff"/>
+                    <rect x="340" y="260" width="32" height="120" rx="6" fill="#34d399"/>
+                    <rect x="290" y="290" width="32" height="90" rx="6" fill="#10b981"/>
+                    <rect x="240" y="330" width="32" height="50" rx="6" fill="#059669"/>
+                </svg>
+            </div>
+
             <h2 class="text-lg font-bold text-slate-900 dark:text-white">Buku Kas Mulae</h2>
             <p class="text-xs text-slate-500">Silakan login untuk membuka server data terproteksi</p>
             
+            <!-- Tombol 1-Klik Login Google -->
+            <button onclick="handleGoogleLogin()" class="w-full flex items-center justify-center gap-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl py-3 text-xs font-bold shadow-sm transition-all">
+                <svg class="w-4 h-4" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+                Masuk dengan Google (Gmail)
+            </button>
+
+            <div class="relative flex py-1 items-center">
+                <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+                <span class="flex-shrink mx-2 text-[10px] font-bold text-slate-400 uppercase">atau email</span>
+                <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+            </div>
+
             <div class="space-y-3 text-left">
                 <div>
                     <label class="text-[11px] font-bold text-slate-500">Email</label>
@@ -65,7 +91,7 @@
                 </div>
             </div>
 
-            <div class="flex gap-2 pt-2">
+            <div class="flex gap-2 pt-1">
                 <button onclick="handleLogin()" id="btn-login" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-2.5 text-xs font-bold shadow transition-all">Login</button>
                 <button onclick="handleRegister()" class="flex-1 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl py-2.5 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">Daftar</button>
             </div>
@@ -73,12 +99,12 @@
         </div>
     </div>
 
-    <!-- OVERLAY 2: PIN LOCK MODAL (LAYAR KUNCI PERANGKAT) -->
+    <!-- OVERLAY 2: PIN LOCK MODAL (TRUST DEVICE) -->
     <div id="pin-overlay" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-40 flex items-center justify-center p-4 hidden">
         <div class="glass-card w-full max-w-sm p-6 text-center space-y-4">
-            <i class="fa-solid fa-lock text-3xl text-emerald-500"></i>
+            <i class="fa-solid fa-shield-halved text-3xl text-emerald-500"></i>
             <h3 class="text-base font-bold text-slate-900 dark:text-white">Masukkan PIN Keamanan</h3>
-            <p class="text-xs text-slate-500">Aplikasi terkunci demi privasi data Anda</p>
+            <p class="text-xs text-slate-500">Perangkat memerlukan verifikasi PIN</p>
             
             <input type="password" id="pin-input" maxlength="6" placeholder="••••" class="w-full text-center tracking-[1em] text-2xl font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-3 outline-none focus:ring-2 focus:ring-emerald-500">
 
@@ -92,45 +118,42 @@
         </div>
     </div>
 
-    <!-- APLIKASI UTAMA -->
+    <!-- MAIN APPLICATION CONTENT -->
     <div class="max-w-md mx-auto space-y-5 pt-6 px-4">
-        
-        <!-- Header Top Bar -->
         <div class="flex justify-between items-center mb-2">
             <div class="flex items-center gap-2.5">
-                <img src="icon.png" alt="Logo" class="w-8 h-8 rounded-lg shadow-sm" onerror="this.style.display='none'">
+                <div class="w-7 h-7 rounded-lg bg-emerald-950 p-1 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-full h-full">
+                        <path d="M100 380V130h50l80 135 80-135h50v250h-50V210l-80 135-80-135v170z" fill="#ffffff"/>
+                        <rect x="340" y="260" width="32" height="120" rx="6" fill="#34d399"/>
+                        <rect x="290" y="290" width="32" height="90" rx="6" fill="#10b981"/>
+                        <rect x="240" y="330" width="32" height="50" rx="6" fill="#059669"/>
+                    </svg>
+                </div>
                 <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Buku Kas</h1>
             </div>
             
             <div class="flex items-center gap-2">
-                <!-- Mode Privasi (Sensor Mata) -->
                 <button onclick="togglePrivacyMode()" title="Mode Privasi Nominal" class="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-colors">
                     <i id="privacy-icon" class="fa-solid fa-eye text-sm"></i>
                 </button>
-                
-                <!-- Pengaturan PIN -->
                 <button onclick="setupPinModal()" title="Setel PIN Keamanan" class="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-colors">
                     <i class="fa-solid fa-key text-sm"></i>
                 </button>
-
-                <!-- Status Koneksi & Logout -->
                 <button onclick="handleLogout()" title="Logout Akun" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-100 hover:text-rose-600 transition-colors">
                     <i class="fa-solid fa-right-from-bracket mr-1"></i>Keluar
                 </button>
-
                 <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
                     <i class="fa-solid fa-circle-half-stroke text-lg"></i>
                 </button>
             </div>
         </div>
 
-        <!-- Segmented Tab Control (Pribadi vs Bisnis) -->
         <div class="segmented-control flex gap-1">
             <button onclick="switchTab('Pribadi')" id="btn-pribadi" class="flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-active">Pribadi</button>
             <button onclick="switchTab('Bisnis')" id="btn-bisnis" class="flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-inactive">Mulae.Production</button>
         </div>
 
-        <!-- Dashboard Grand Total -->
         <div class="glass-card p-5 fade-in">
             <div class="flex justify-between items-start mb-4">
                 <div>
@@ -155,7 +178,6 @@
             </div>
         </div>
 
-        <!-- Form Input Transaksi -->
         <div class="glass-card p-5 fade-in" id="form-section">
             <div class="segmented-control flex gap-1 mb-3">
                 <button onclick="setJenis('Pengeluaran')" id="btn-keluar" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-active text-rose-600">Pengeluaran</button>
@@ -163,7 +185,6 @@
                 <button onclick="setJenis('Hutang')" id="btn-hutang" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-inactive">Catat Hutang</button>
             </div>
 
-            <!-- Panel Tag Sifat Pengeluaran -->
             <div id="panel-sifat" class="flex gap-2 mb-4">
                 <button onclick="setSifat('Produktif')" id="btn-produktif" class="flex-1 py-1.5 text-xs font-semibold rounded-lg border-2 border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 transition-all">💡 Produktif</button>
                 <button onclick="setSifat('Self-Reward')" id="btn-selfreward" class="flex-1 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-400 hover:text-fuchsia-600 transition-all">🎉 Self-Reward</button>
@@ -220,7 +241,6 @@
             </div>
         </div>
 
-        <!-- Tombol Sync Google Sheets -->
         <div class="text-center fade-in">
             <button onclick="syncToSheets()" class="w-full py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50 rounded-xl hover:bg-emerald-100 transition-colors">
                 <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Sinkronisasi ke Google Sheets
@@ -228,7 +248,6 @@
             <p id="sync-status" class="text-xs mt-1.5 font-semibold hidden">Menyinkronkan...</p>
         </div>
 
-        <!-- KALENDER & RIWAYAT PER BULAN -->
         <div class="glass-card p-5 fade-in space-y-4">
             <div class="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
                 <button onclick="gantiBulanKalender(-1)" class="p-1.5 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs">
@@ -277,8 +296,8 @@
     <!-- SCRIPT FIREBASE & LOGIKA APLIKASI -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCE9jIpz-iM2gy6N-0CrtXcca7SeA-2ZRg",
@@ -292,6 +311,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
         
         const GOOGLE_APP_SCRIPT_URL = "URL_APPS_SCRIPT_ANDA_DISINI";
 
@@ -320,13 +340,12 @@
             }
         };
 
-        // --- AUTHENTICATION & PIN LOCK CHECK ---
+        // --- AUTHENTICATION & TRUST DEVICE CHECK ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
                 document.getElementById('auth-overlay').classList.add('hidden');
                 
-                // Cek PIN Lock
                 const savedPin = localStorage.getItem('mulaePin');
                 const isTrusted = localStorage.getItem('mulaeTrustDevice') === 'true';
                 
@@ -356,31 +375,54 @@
         }
 
         // --- AUTH HANDLERS ---
+        window.handleGoogleLogin = async function() {
+            const errEl = document.getElementById('auth-error');
+            errEl.classList.add('hidden');
+            try {
+                await signInWithPopup(auth, googleProvider);
+            } catch (err) {
+                errEl.innerText = "Login Google Gagal: " + err.message;
+                errEl.classList.remove('hidden');
+            }
+        }
+
         window.handleLogin = async function() {
-            const email = document.getElementById('auth-email').value;
+            const email = document.getElementById('auth-email').value.trim();
             const password = document.getElementById('auth-password').value;
             const errEl = document.getElementById('auth-error');
             errEl.classList.add('hidden');
 
+            if (!email || !password) {
+                errEl.innerText = "Email dan Password wajib diisi!";
+                errEl.classList.remove('hidden');
+                return;
+            }
+
             try {
                 await signInWithEmailAndPassword(auth, email, password);
             } catch (err) {
-                errEl.innerText = "Login gagal: " + err.message;
+                errEl.innerText = "Login Gagal: " + err.message;
                 errEl.classList.remove('hidden');
             }
         }
 
         window.handleRegister = async function() {
-            const email = document.getElementById('auth-email').value;
+            const email = document.getElementById('auth-email').value.trim();
             const password = document.getElementById('auth-password').value;
             const errEl = document.getElementById('auth-error');
             errEl.classList.add('hidden');
 
+            if (!email || !password) {
+                errEl.innerText = "Mohon isi Email dan Password terlebih dahulu!";
+                errEl.classList.remove('hidden');
+                return;
+            }
+
             try {
                 await createUserWithEmailAndPassword(auth, email, password);
-                alert("Pendaftaran berhasil! Akun Anda sudah aktif.");
+                alert("Pendaftaran berhasil! Akun Anda sudah terdaftar dan siap digunakan.");
             } catch (err) {
-                errEl.innerText = "Daftar gagal: " + err.message;
+                errEl.innerText = "Daftar Gagal: " + err.message;
                 errEl.classList.remove('hidden');
             }
         }
@@ -417,7 +459,7 @@
                     alert("PIN Keamanan telah dihapus.");
                 } else {
                     localStorage.setItem('mulaePin', pinBicara.trim());
-                    localStorage.removeItem('mulaeTrustDevice'); // reset trusted device agar diuji
+                    localStorage.removeItem('mulaeTrustDevice');
                     alert("PIN berhasil diatur!");
                 }
             }
@@ -739,7 +781,6 @@
             const labaBulan = calMasuk - calKeluar;
             document.getElementById('cal-rekap-laba').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(labaBulan);
 
-            // Render Kalender
             const tilesContainer = document.getElementById('calendar-tiles');
             tilesContainer.innerHTML = '';
             const firstDayIndex = new Date(targetYear, targetMonth, 1).getDay();
@@ -777,7 +818,6 @@
                 `;
             }
 
-            // Render Detail List
             const listDetail = document.getElementById('history-list-detail');
             listDetail.innerHTML = '';
 
@@ -878,7 +918,6 @@
             }
         }
 
-        // Setup awal
         setWaktuSekarang();
         setJenis('Pengeluaran');
         switchTab('Pribadi');
