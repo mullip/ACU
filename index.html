@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kas Mulae.Production</title>
+    
+    <!-- PWA & Web Thumbnail / Favicon -->
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -33,39 +38,86 @@
         .fade-in { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: translateY(0); } }
         
-        /* Grid 1x1 Kalender */
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 6px;
-        }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
         .day-tile {
-            aspect-ratio: 1 / 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
+            aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-radius: 10px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; relative;
         }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 theme-transition pb-24 min-h-screen">
+
+    <!-- OVERLAY 1: FIREBASE AUTH LOGIN MODAL -->
+    <div id="auth-overlay" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-sm p-6 space-y-4 text-center">
+            <img src="icon.png" alt="Mulae Icon" class="w-16 h-16 mx-auto rounded-2xl shadow-md" onerror="this.src='https://via.placeholder.com/64?text=M'">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white">Buku Kas Mulae</h2>
+            <p class="text-xs text-slate-500">Silakan login untuk membuka server data terproteksi</p>
+            
+            <div class="space-y-3 text-left">
+                <div>
+                    <label class="text-[11px] font-bold text-slate-500">Email</label>
+                    <input type="email" id="auth-email" placeholder="email@domain.com" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div>
+                    <label class="text-[11px] font-bold text-slate-500">Password</label>
+                    <input type="password" id="auth-password" placeholder="••••••••" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button onclick="handleLogin()" id="btn-login" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-2.5 text-xs font-bold shadow transition-all">Login</button>
+                <button onclick="handleRegister()" class="flex-1 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl py-2.5 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">Daftar</button>
+            </div>
+            <p id="auth-error" class="text-[11px] text-rose-500 font-bold hidden"></p>
+        </div>
+    </div>
+
+    <!-- OVERLAY 2: PIN LOCK MODAL (LAYAR KUNCI PERANGKAT) -->
+    <div id="pin-overlay" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-40 flex items-center justify-center p-4 hidden">
+        <div class="glass-card w-full max-w-sm p-6 text-center space-y-4">
+            <i class="fa-solid fa-lock text-3xl text-emerald-500"></i>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Masukkan PIN Keamanan</h3>
+            <p class="text-xs text-slate-500">Aplikasi terkunci demi privasi data Anda</p>
+            
+            <input type="password" id="pin-input" maxlength="6" placeholder="••••" class="w-full text-center tracking-[1em] text-2xl font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-3 outline-none focus:ring-2 focus:ring-emerald-500">
+
+            <div class="flex items-center justify-center gap-2 text-xs font-semibold text-slate-500">
+                <input type="checkbox" id="trust-device-check" class="rounded text-emerald-600 focus:ring-emerald-500">
+                <label for="trust-device-check">Ingat perangkat ini (Trust Device)</label>
+            </div>
+
+            <button onclick="verifyPin()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-2.5 text-xs font-bold shadow transition-all">Buka Kunci</button>
+            <p id="pin-error" class="text-xs text-rose-500 font-bold hidden">PIN salah!</p>
+        </div>
+    </div>
+
+    <!-- APLIKASI UTAMA -->
     <div class="max-w-md mx-auto space-y-5 pt-6 px-4">
         
         <!-- Header Top Bar -->
         <div class="flex justify-between items-center mb-2">
-            <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center">
-                <i class="fa-solid fa-wallet text-indigo-600 mr-2.5"></i>Buku Kas
-            </h1>
+            <div class="flex items-center gap-2.5">
+                <img src="icon.png" alt="Logo" class="w-8 h-8 rounded-lg shadow-sm" onerror="this.style.display='none'">
+                <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Buku Kas</h1>
+            </div>
+            
             <div class="flex items-center gap-2">
-                <span id="koneksi-status" class="text-[10px] font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-                    <i class="fa-solid fa-spinner fa-spin"></i> Loading...
-                </span>
+                <!-- Mode Privasi (Sensor Mata) -->
+                <button onclick="togglePrivacyMode()" title="Mode Privasi Nominal" class="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-colors">
+                    <i id="privacy-icon" class="fa-solid fa-eye text-sm"></i>
+                </button>
+                
+                <!-- Pengaturan PIN -->
+                <button onclick="setupPinModal()" title="Setel PIN Keamanan" class="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-colors">
+                    <i class="fa-solid fa-key text-sm"></i>
+                </button>
+
+                <!-- Status Koneksi & Logout -->
+                <button onclick="handleLogout()" title="Logout Akun" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-100 hover:text-rose-600 transition-colors">
+                    <i class="fa-solid fa-right-from-bracket mr-1"></i>Keluar
+                </button>
+
                 <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
                     <i class="fa-solid fa-circle-half-stroke text-lg"></i>
                 </button>
@@ -113,47 +165,41 @@
 
             <!-- Panel Tag Sifat Pengeluaran -->
             <div id="panel-sifat" class="flex gap-2 mb-4">
-                <button onclick="setSifat('Produktif')" id="btn-produktif" class="flex-1 py-1.5 text-xs font-semibold rounded-lg border-2 border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300 transition-all">💡 Produktif</button>
+                <button onclick="setSifat('Produktif')" id="btn-produktif" class="flex-1 py-1.5 text-xs font-semibold rounded-lg border-2 border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 transition-all">💡 Produktif</button>
                 <button onclick="setSifat('Self-Reward')" id="btn-selfreward" class="flex-1 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-400 hover:text-fuchsia-600 transition-all">🎉 Self-Reward</button>
             </div>
 
             <div class="space-y-3.5">
-                <!-- Waktu & Tanggal Input -->
                 <div class="relative">
                     <span class="absolute left-3.5 top-3 text-slate-400 text-sm"><i class="fa-solid fa-clock"></i></span>
-                    <input type="datetime-local" id="input-waktu" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 pl-10 pr-3 font-semibold text-xs outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow text-slate-700 dark:text-slate-200">
+                    <input type="datetime-local" id="input-waktu" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 pl-10 pr-3 font-semibold text-xs outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow text-slate-700 dark:text-slate-200">
                 </div>
 
-                <!-- Nominal -->
                 <div class="relative">
                     <span class="absolute left-3.5 top-3 text-slate-400 font-bold text-sm">Rp</span>
-                    <input type="number" id="input-nominal" placeholder="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 pl-10 pr-3 font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                    <input type="number" id="input-nominal" placeholder="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 pl-10 pr-3 font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow">
                 </div>
                 
-                <!-- Bar Pilihan Cepat Terpisah (Pengeluaran / Pemasukan) -->
                 <div>
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Pilihan Cepat (<span id="label-jenis-chip">Pengeluaran</span>)</span>
-                        <button onclick="toggleManageChips()" class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                        <button onclick="toggleManageChips()" class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
                             <i class="fa-solid fa-pen-to-square"></i> Kelola
                         </button>
                     </div>
                     <div id="chips-container" class="flex flex-wrap gap-1.5 text-xs font-medium"></div>
                 </div>
 
-                <!-- Keterangan Transaksi -->
-                <input type="text" id="input-keterangan" placeholder="Keterangan transaksi..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow">
+                <input type="text" id="input-keterangan" placeholder="Keterangan transaksi..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow">
                 
-                <!-- Deteksi Lokasi -->
                 <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-800/80 p-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700">
                     <span id="lokasi-status" class="text-xs font-semibold text-slate-500"><i class="fa-solid fa-location-dot"></i> Lokasi Belum Aktif</span>
-                    <button onclick="mintaLokasi()" class="text-[11px] bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 px-2.5 py-1 rounded-lg font-bold hover:bg-indigo-200 transition-colors">Deteksi Lokasi</button>
+                    <button onclick="mintaLokasi()" class="text-[11px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 px-2.5 py-1 rounded-lg font-bold hover:bg-emerald-200 transition-colors">Deteksi Lokasi</button>
                 </div>
 
-                <!-- Upload Struk Foto -->
                 <div class="relative">
                     <label for="input-foto" class="flex items-center justify-center cursor-pointer w-full py-2.5 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                        <i class="fa-solid fa-camera mr-2 text-indigo-500"></i> Lampirkan Struk / Foto
+                        <i class="fa-solid fa-camera mr-2 text-emerald-500"></i> Lampirkan Struk / Foto
                     </label>
                     <input type="file" id="input-foto" accept="image/*" capture="environment" class="hidden" onchange="previewAndCompressFoto(event)">
                 </div>
@@ -165,10 +211,9 @@
                     </button>
                 </div>
                 
-                <!-- Action Buttons -->
                 <div class="flex gap-2 pt-1">
                     <button onclick="batalEdit()" id="btn-batal" class="hidden w-1/3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl py-3 font-bold text-xs transition-all">Batal</button>
-                    <button onclick="simpanTransaksi()" id="btn-simpan" class="w-full flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-3 font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-[0.98]">
+                    <button onclick="simpanTransaksi()" id="btn-simpan" class="w-full flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-3 font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-[0.98]">
                         Simpan Transaksi
                     </button>
                 </div>
@@ -177,37 +222,33 @@
 
         <!-- Tombol Sync Google Sheets -->
         <div class="text-center fade-in">
-            <button onclick="syncToSheets()" class="w-full py-2.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 rounded-xl hover:bg-indigo-100 transition-colors">
+            <button onclick="syncToSheets()" class="w-full py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50 rounded-xl hover:bg-emerald-100 transition-colors">
                 <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Sinkronisasi ke Google Sheets
             </button>
             <p id="sync-status" class="text-xs mt-1.5 font-semibold hidden">Menyinkronkan...</p>
         </div>
 
-        <!-- KALENDER & RIWAYAT ARSIP PER BULAN -->
+        <!-- KALENDER & RIWAYAT PER BULAN -->
         <div class="glass-card p-5 fade-in space-y-4">
-            <!-- Selector Bulan Navigasi -->
             <div class="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
                 <button onclick="gantiBulanKalender(-1)" class="p-1.5 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs">
                     <i class="fa-solid fa-chevron-left"></i>
                 </button>
                 <div class="text-center">
                     <h3 class="font-extrabold text-sm text-slate-800 dark:text-slate-100 uppercase tracking-wide" id="cal-month-title">Bulan Ini</h3>
-                    <p class="text-[10px] text-slate-400 font-semibold" id="cal-month-sub font-mono">Pilih Tanggal</p>
+                    <p class="text-[10px] text-slate-400 font-semibold" id="cal-month-sub">Pilih Tanggal</p>
                 </div>
                 <button onclick="gantiBulanKalender(1)" class="p-1.5 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs">
                     <i class="fa-solid fa-chevron-right"></i>
                 </button>
             </div>
 
-            <!-- Header Nama Hari -->
             <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-extrabold text-slate-400 uppercase">
                 <div>Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div>
             </div>
 
-            <!-- Grid 1x1 Tanggal Kalender (30-31 Hari) -->
             <div id="calendar-tiles" class="calendar-grid"></div>
 
-            <!-- Rekapitulasi Ringkas Bulan Terpilih -->
             <div class="bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800 text-xs space-y-1.5">
                 <div class="flex justify-between font-semibold">
                     <span class="text-slate-500">Pemasukan Bulan Ini:</span>
@@ -219,17 +260,15 @@
                 </div>
                 <div class="flex justify-between font-bold border-t border-slate-200 dark:border-slate-800 pt-1.5 mt-1">
                     <span class="text-slate-700 dark:text-slate-200">Sisa / Laba Bulan Ini:</span>
-                    <span id="cal-rekap-laba" class="text-indigo-600 dark:text-indigo-400">Rp0</span>
+                    <span id="cal-rekap-laba" class="text-emerald-600 dark:text-emerald-400">Rp0</span>
                 </div>
             </div>
 
-            <!-- Tombol Reset Filter Tanggal -->
             <div class="flex justify-between items-center pt-1">
                 <span class="text-xs font-bold text-slate-700 dark:text-slate-200" id="selected-date-label">Semua Hari di Bulan Ini</span>
-                <button onclick="resetFilterTanggal()" id="btn-reset-filter" class="hidden text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline">Tampilkan Semua</button>
+                <button onclick="resetFilterTanggal()" id="btn-reset-filter" class="hidden text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline">Tampilkan Semua</button>
             </div>
 
-            <!-- Daftar Detail Transaksi Tanggal/Bulan Terpilih -->
             <div id="history-list-detail" class="space-y-2.5 pt-1"></div>
         </div>
 
@@ -238,9 +277,9 @@
     <!-- SCRIPT FIREBASE & LOGIKA APLIKASI -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCE9jIpz-iM2gy6N-0CrtXcca7SeA-2ZRg",
             authDomain: "keuangan-fea39.firebaseapp.com",
@@ -251,6 +290,7 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
         
         const GOOGLE_APP_SCRIPT_URL = "URL_APPS_SCRIPT_ANDA_DISINI";
@@ -263,12 +303,12 @@
         let editDocId = null;
         let currentLocationStr = null;
         let isManagingChips = false;
+        let isPrivacyMode = localStorage.getItem('mulaePrivacy') === 'true';
 
-        // Tanggal Kalender Aktif (Default: Bulan & Tahun Ini)
         let activeCalDate = new Date();
-        let selectedDayFilter = null; // Filter hari spesifik (null = tampilkan sebulan)
+        let selectedDayFilter = null;
+        let currentUser = null;
 
-        // Structure Pilihan Cepat Terpisah (Pengeluaran vs Pemasukan)
         let categories = JSON.parse(localStorage.getItem('mulaeCatsV2')) || {
             Pribadi: {
                 Pengeluaran: ['Makan', 'Bensin', 'Nongkrong', 'Tagihan', 'Belanja'],
@@ -280,25 +320,127 @@
             }
         };
 
-        // Firebase Real-time Listener
-        const q = query(collection(db, "transactions"), orderBy("id", "desc"));
-        onSnapshot(q, (snapshot) => {
-            dataTransaksi = [];
-            snapshot.forEach((doc) => {
-                dataTransaksi.push({ ...doc.data(), docId: doc.id });
-            });
-            
-            document.getElementById('koneksi-status').className = "text-[10px] font-bold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300";
-            document.getElementById('koneksi-status').innerHTML = '<i class="fa-solid fa-cloud-check"></i> Tersinkron';
-            
-            kalkulasiDanRender();
-        }, (error) => {
-            document.getElementById('koneksi-status').className = "text-[10px] font-bold px-2 py-1 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300";
-            document.getElementById('koneksi-status').innerHTML = '<i class="fa-solid fa-cloud-xmark"></i> Offline';
+        // --- AUTHENTICATION & PIN LOCK CHECK ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('auth-overlay').classList.add('hidden');
+                
+                // Cek PIN Lock
+                const savedPin = localStorage.getItem('mulaePin');
+                const isTrusted = localStorage.getItem('mulaeTrustDevice') === 'true';
+                
+                if (savedPin && !isTrusted) {
+                    document.getElementById('pin-overlay').classList.remove('hidden');
+                } else {
+                    document.getElementById('pin-overlay').classList.add('hidden');
+                }
+
+                initFirestoreListener();
+            } else {
+                currentUser = null;
+                document.getElementById('auth-overlay').classList.remove('hidden');
+            }
         });
 
-        // --- EXPOSE FUNCTIONS TO WINDOW ---
-        
+        function initFirestoreListener() {
+            if(!currentUser) return;
+            const q = query(collection(db, "transactions"), orderBy("id", "desc"));
+            onSnapshot(q, (snapshot) => {
+                dataTransaksi = [];
+                snapshot.forEach((doc) => {
+                    dataTransaksi.push({ ...doc.data(), docId: doc.id });
+                });
+                kalkulasiDanRender();
+            });
+        }
+
+        // --- AUTH HANDLERS ---
+        window.handleLogin = async function() {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const errEl = document.getElementById('auth-error');
+            errEl.classList.add('hidden');
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (err) {
+                errEl.innerText = "Login gagal: " + err.message;
+                errEl.classList.remove('hidden');
+            }
+        }
+
+        window.handleRegister = async function() {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const errEl = document.getElementById('auth-error');
+            errEl.classList.add('hidden');
+
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                alert("Pendaftaran berhasil! Akun Anda sudah aktif.");
+            } catch (err) {
+                errEl.innerText = "Daftar gagal: " + err.message;
+                errEl.classList.remove('hidden');
+            }
+        }
+
+        window.handleLogout = function() {
+            if(confirm("Keluar dari akun?")) {
+                signOut(auth);
+            }
+        }
+
+        // --- PIN & PRIVACY HANDLERS ---
+        window.verifyPin = function() {
+            const inputPin = document.getElementById('pin-input').value;
+            const savedPin = localStorage.getItem('mulaePin');
+            const trustCheck = document.getElementById('trust-device-check').checked;
+
+            if (inputPin === savedPin) {
+                document.getElementById('pin-overlay').classList.add('hidden');
+                document.getElementById('pin-error').classList.add('hidden');
+                if (trustCheck) {
+                    localStorage.setItem('mulaeTrustDevice', 'true');
+                }
+            } else {
+                document.getElementById('pin-error').classList.remove('hidden');
+            }
+        }
+
+        window.setupPinModal = function() {
+            const pinBicara = prompt("Masukkan 4-6 digit PIN keamanan baru (Kosongkan untuk menghapus PIN):");
+            if (pinBicara !== null) {
+                if (pinBicara.trim() === "") {
+                    localStorage.removeItem('mulaePin');
+                    localStorage.removeItem('mulaeTrustDevice');
+                    alert("PIN Keamanan telah dihapus.");
+                } else {
+                    localStorage.setItem('mulaePin', pinBicara.trim());
+                    localStorage.removeItem('mulaeTrustDevice'); // reset trusted device agar diuji
+                    alert("PIN berhasil diatur!");
+                }
+            }
+        }
+
+        window.togglePrivacyMode = function() {
+            isPrivacyMode = !isPrivacyMode;
+            localStorage.setItem('mulaePrivacy', isPrivacyMode);
+            const icon = document.getElementById('privacy-icon');
+            if(isPrivacyMode) {
+                icon.className = "fa-solid fa-eye-slash text-sm text-emerald-600";
+            } else {
+                icon.className = "fa-solid fa-eye text-sm";
+            }
+            kalkulasiDanRender();
+        }
+
+        function formatRupiah(angka) {
+            if(isPrivacyMode) return "Rp ••••••••";
+            return new Intl.NumberFormat('id-ID').format(angka);
+        }
+
+        // --- APPLICATION LOGIC ---
         window.setWaktuSekarang = function() {
             const now = new Date();
             const tzOffset = now.getTimezoneOffset() * 60000;
@@ -306,9 +448,7 @@
             document.getElementById('input-waktu').value = localISOTime;
         }
 
-        window.toggleTheme = function() {
-            document.documentElement.classList.toggle('dark');
-        }
+        window.toggleTheme = function() { document.documentElement.classList.toggle('dark'); }
 
         window.switchTab = function(tab) {
             currentTab = tab;
@@ -324,11 +464,11 @@
             const btnSelf = document.getElementById('btn-selfreward');
 
             if(sifat === 'Produktif') {
-                btnProd.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg border-2 border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300 transition-all";
+                btnProd.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg border-2 border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 transition-all";
                 btnSelf.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-400 hover:text-fuchsia-600 transition-all";
             } else {
                 btnSelf.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg border-2 border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 dark:border-fuchsia-800 dark:bg-fuchsia-950/40 dark:text-fuchsia-300 transition-all";
-                btnProd.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-400 hover:text-indigo-600 transition-all";
+                btnProd.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-400 hover:text-emerald-600 transition-all";
             }
         }
 
@@ -344,7 +484,6 @@
             renderChips();
         }
 
-        // --- MANAJEMEN CATATAN CEPAT (CHIPS) ---
         function renderChips() {
             const container = document.getElementById('chips-container');
             const targetJenis = (jenisTx === 'Hutang') ? 'Pengeluaran' : jenisTx;
@@ -354,22 +493,19 @@
                 if(isManagingChips) {
                     return `<div class="flex items-center gap-1 bg-slate-200 dark:bg-slate-700 px-2.5 py-1 rounded-full text-xs font-semibold">
                         <span>${cat}</span>
-                        <button onclick="editSingleChip(${idx})" class="text-indigo-600 dark:text-indigo-300 ml-1 hover:text-indigo-800"><i class="fa-solid fa-pen text-[10px]"></i></button>
-                        <button onclick="hapusSingleChip(${idx})" class="text-rose-500 hover:text-rose-700"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                        <button onclick="editSingleChip(${idx})" class="text-emerald-600 dark:text-emerald-300 ml-1"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                        <button onclick="hapusSingleChip(${idx})" class="text-rose-500"><i class="fa-solid fa-xmark text-[10px]"></i></button>
                     </div>`;
                 } else {
-                    return `<button onclick="document.getElementById('input-keterangan').value = '${cat}'" class="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 hover:text-indigo-600 transition-colors border border-slate-200/60 dark:border-slate-700">${cat}</button>`;
+                    return `<button onclick="document.getElementById('input-keterangan').value = '${cat}'" class="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 hover:text-emerald-600 transition-colors border border-slate-200/60 dark:border-slate-700">${cat}</button>`;
                 }
             }).join('');
 
-            html += `<button onclick="tambahKategori()" class="px-3 py-1.5 rounded-full border border-dashed border-indigo-500 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors"><i class="fa-solid fa-plus mr-1"></i> Tambah</button>`;
+            html += `<button onclick="tambahKategori()" class="px-3 py-1.5 rounded-full border border-dashed border-emerald-500 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"><i class="fa-solid fa-plus mr-1"></i> Tambah</button>`;
             container.innerHTML = html;
         }
 
-        window.toggleManageChips = function() {
-            isManagingChips = !isManagingChips;
-            renderChips();
-        }
+        window.toggleManageChips = function() { isManagingChips = !isManagingChips; renderChips(); }
 
         window.tambahKategori = function() {
             const baru = prompt("Masukkan nama pilihan cepat baru:");
@@ -399,10 +535,6 @@
                 localStorage.setItem('mulaeCatsV2', JSON.stringify(categories));
                 renderChips();
             }
-        }
-
-        function formatRupiah(angka) {
-            return new Intl.NumberFormat('id-ID').format(angka);
         }
 
         window.mintaLokasi = function() {
@@ -479,7 +611,8 @@
                 keterangan: keterangan,
                 foto: base64FotoAktif, 
                 lokasi: currentLocationStr, 
-                syncStatus: false
+                syncStatus: false,
+                uid: currentUser ? currentUser.uid : 'public'
             };
 
             try {
@@ -492,7 +625,7 @@
                 }
                 batalEdit();
             } catch (e) {
-                alert("Gagal menyimpan ke server.");
+                alert("Gagal menyimpan data.");
             }
             
             document.getElementById('btn-simpan').innerHTML = 'Simpan Transaksi';
@@ -539,7 +672,7 @@
 
         window.tandaiLunas = async function(docId) {
             const tx = dataTransaksi.find(t => t.docId === docId);
-            if(tx && confirm("Tandai hutang ini sebagai Lunas?\n(Akan otomatis memotong saldo sebagai Pengeluaran)")) {
+            if(tx && confirm("Tandai hutang ini sebagai Lunas?\n(Memotong saldo sebagai Pengeluaran)")) {
                 try {
                     await updateDoc(doc(db, "transactions", docId), { isLunas: true });
                     const dateObj = new Date();
@@ -552,28 +685,23 @@
                         tglAngka: dateObj.getDate(), blnAngka: dateObj.getMonth(), thnAngka: dateObj.getFullYear(),
                         entitas: tx.entitas, jenis: 'Pengeluaran', sifat: 'Produktif', 
                         nominal: tx.nominal, keterangan: "Pelunasan Hutang: " + tx.keterangan,
-                        foto: null, lokasi: null, syncStatus: false, isLunas: false
+                        foto: null, lokasi: null, syncStatus: false, isLunas: false,
+                        uid: currentUser ? currentUser.uid : 'public'
                     };
                     await addDoc(collection(db, "transactions"), newTx);
                 } catch (e) { alert("Gagal memproses pelunasan."); }
             }
         }
 
-        // --- NAVIGASI BULAN KALENDER ---
         window.gantiBulanKalender = function(delta) {
             activeCalDate.setMonth(activeCalDate.getMonth() + delta);
             selectedDayFilter = null;
             kalkulasiDanRender();
         }
 
-        window.resetFilterTanggal = function() {
-            selectedDayFilter = null;
-            kalkulasiDanRender();
-        }
+        window.resetFilterTanggal = function() { selectedDayFilter = null; kalkulasiDanRender(); }
 
-        // --- KALKULASI DASBOR & RENDER KALENDER 1x1 ---
         function kalkulasiDanRender() {
-            // 1. Dasbor Grand Total Keseluruhan (Tab Aktif)
             let grandMasuk = 0, grandKeluar = 0, grandHutang = 0;
             dataTransaksi.filter(t => t.entitas === currentTab).forEach(t => {
                 if(t.jenis === 'Pemasukan') grandMasuk += t.nominal;
@@ -581,53 +709,46 @@
                 else if(t.jenis === 'Hutang' && !t.isLunas) grandHutang += t.nominal;
             });
 
-            document.getElementById('total-masuk').innerText = 'Rp' + formatRupiah(grandMasuk);
-            document.getElementById('total-keluar').innerText = 'Rp' + formatRupiah(grandKeluar);
-            document.getElementById('sisa-saldo').innerText = 'Rp' + formatRupiah(grandMasuk - grandKeluar);
-            document.getElementById('total-hutang').innerText = 'Rp' + formatRupiah(grandHutang);
+            document.getElementById('total-masuk').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(grandMasuk);
+            document.getElementById('total-keluar').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(grandKeluar);
+            document.getElementById('sisa-saldo').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(grandMasuk - grandKeluar);
+            document.getElementById('total-hutang').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(grandHutang);
 
-            // 2. Render Header Bulan Kalender
             const monthName = activeCalDate.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
             document.getElementById('cal-month-title').innerText = monthName;
 
             const targetYear = activeCalDate.getFullYear();
             const targetMonth = activeCalDate.getMonth();
 
-            // Filter data khusus Bulan & Entitas ini
             const dataBulanIni = dataTransaksi.filter(t => {
                 if(t.entitas !== currentTab) return false;
                 if(t.thnAngka !== undefined && t.blnAngka !== undefined) {
                     return t.thnAngka === targetYear && t.blnAngka === targetMonth;
                 }
-                return t.bulan === monthName; // fallback string
+                return t.bulan === monthName;
             });
 
-            // Rekap Bulanan
             let calMasuk = 0, calKeluar = 0;
             dataBulanIni.forEach(t => {
                 if(t.jenis === 'Pemasukan') calMasuk += t.nominal;
                 else if(t.jenis === 'Pengeluaran') calKeluar += t.nominal;
             });
 
-            document.getElementById('cal-rekap-masuk').innerText = 'Rp' + formatRupiah(calMasuk);
-            document.getElementById('cal-rekap-keluar').innerText = 'Rp' + formatRupiah(calKeluar);
+            document.getElementById('cal-rekap-masuk').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(calMasuk);
+            document.getElementById('cal-rekap-keluar').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(calKeluar);
             const labaBulan = calMasuk - calKeluar;
-            document.getElementById('cal-rekap-laba').innerText = 'Rp' + formatRupiah(labaBulan);
-            document.getElementById('cal-rekap-laba').className = labaBulan < 0 ? 'text-rose-600 font-bold' : 'text-indigo-600 dark:text-indigo-400 font-bold';
+            document.getElementById('cal-rekap-laba').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(labaBulan);
 
-            // 3. Render Grid 1x1 Tanggal Kalender
+            // Render Kalender
             const tilesContainer = document.getElementById('calendar-tiles');
             tilesContainer.innerHTML = '';
-
             const firstDayIndex = new Date(targetYear, targetMonth, 1).getDay();
             const totalDaysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
 
-            // Slot kosong sebelum tanggal 1
             for(let i = 0; i < firstDayIndex; i++) {
                 tilesContainer.innerHTML += `<div class="day-tile opacity-0 pointer-events-none"></div>`;
             }
 
-            // Petakan transaksi ke tanggal
             const txCountPerDay = {};
             dataBulanIni.forEach(t => {
                 const dayNum = t.tglAngka || parseInt(t.tanggal);
@@ -642,9 +763,9 @@
                 const isSelected = selectedDayFilter === day;
                 const isToday = isCurrentMonthNow && today.getDate() === day;
 
-                let tileClass = "bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-indigo-100";
-                if(isSelected) tileClass = "bg-indigo-600 text-white font-black shadow-md ring-2 ring-indigo-400";
-                else if(isToday) tileClass = "border-2 border-indigo-500 text-indigo-600 dark:text-indigo-300 font-bold";
+                let tileClass = "bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-emerald-100";
+                if(isSelected) tileClass = "bg-emerald-600 text-white font-black shadow-md ring-2 ring-emerald-400";
+                else if(isToday) tileClass = "border-2 border-emerald-500 text-emerald-600 dark:text-emerald-300 font-bold";
 
                 const dotBadge = hasTx ? `<span class="w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-500'} absolute bottom-1"></span>` : '';
 
@@ -656,7 +777,7 @@
                 `;
             }
 
-            // 4. Render Daftar Detail Transaksi (Filtered by selected day / whole month)
+            // Render Detail List
             const listDetail = document.getElementById('history-list-detail');
             listDetail.innerHTML = '';
 
@@ -687,13 +808,13 @@
                 }
 
                 const fotoHtml = t.foto ? `<img src="${t.foto}" class="mt-2 w-14 h-14 object-cover rounded-lg border border-slate-200 shadow-sm cursor-pointer hover:scale-150 origin-left transition-transform">` : '';
-                const locHtml = t.lokasi ? `<a href="${t.lokasi}" target="_blank" class="text-indigo-500 ml-1.5 hover:underline"><i class="fa-solid fa-map-pin"></i></a>` : '';
+                const locHtml = t.lokasi ? `<a href="${t.lokasi}" target="_blank" class="text-emerald-500 ml-1.5 hover:underline"><i class="fa-solid fa-map-pin"></i></a>` : '';
                 
                 let lunasBtn = (t.jenis === 'Hutang' && !t.isLunas) ? `<button onclick="tandaiLunas('${t.docId}')" class="text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded font-bold hover:bg-amber-600">LUNAS</button>` : '';
                 if(t.isLunas) lunasBtn = `<span class="text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-500 px-2 py-0.5 rounded font-bold">LUNAS</span>`;
 
                 let sifatBadge = '';
-                if(t.sifat === 'Produktif') sifatBadge = `<span class="text-[9px] bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-300 px-1.5 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 ml-1.5 font-bold">💡 Produktif</span>`;
+                if(t.sifat === 'Produktif') sifatBadge = `<span class="text-[9px] bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 ml-1.5 font-bold">💡 Produktif</span>`;
                 if(t.sifat === 'Self-Reward') sifatBadge = `<span class="text-[9px] bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/60 dark:text-fuchsia-300 px-1.5 py-0.5 rounded border border-fuchsia-200 dark:border-fuchsia-800 ml-1.5 font-bold">🎉 Self-Reward</span>`;
 
                 listDetail.innerHTML += `
@@ -709,7 +830,7 @@
                                 <button onclick="hapusTx('${t.docId}')" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-rose-500 px-2 py-0.5 rounded font-semibold"><i class="fa-solid fa-trash"></i> Hapus</button>
                             </div>
                         </div>
-                        <div class="font-extrabold text-xs whitespace-nowrap ${nominalColor} pt-0.5">${prefix}Rp${formatRupiah(t.nominal)}</div>
+                        <div class="font-extrabold text-xs whitespace-nowrap ${nominalColor} pt-0.5">${prefix}${formatRupiah(t.nominal)}</div>
                     </div>
                 `;
             });
@@ -727,7 +848,7 @@
             
             const status = document.getElementById('sync-status');
             status.classList.remove('hidden');
-            status.className = "text-xs mt-1.5 font-semibold text-indigo-600 block";
+            status.className = "text-xs mt-1.5 font-semibold text-emerald-600 block";
             status.innerText = "Mengirim " + unsynced.length + " data...";
 
             if(GOOGLE_APP_SCRIPT_URL === "URL_APPS_SCRIPT_ANDA_DISINI") return alert("URL Google Apps Script belum diisi.");
@@ -757,10 +878,13 @@
             }
         }
 
-        // Inisialisasi awal
+        // Setup awal
         setWaktuSekarang();
         setJenis('Pengeluaran');
         switchTab('Pribadi');
+        if(isPrivacyMode) {
+            document.getElementById('privacy-icon').className = "fa-solid fa-eye-slash text-sm text-emerald-600";
+        }
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
     </script>
 </body>
