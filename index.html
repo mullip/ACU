@@ -9,6 +9,11 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='128' fill='%23053c29'/><path d='M120 370V140h45l75 125 75-125h45v230h-45V220l-75 125-75-125v150z' fill='%23ffffff'/><rect x='340' y='270' width='30' height='100' rx='6' fill='%2334d399'/><rect x='290' y='300' width='30' height='70' rx='6' fill='%2310b981'/><rect x='240' y='330' width='30' height='40' rx='6' fill='%23059669'/></svg>">
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        };
+    </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
@@ -149,8 +154,8 @@
                         <button onclick="handleLogout()" title="Logout Akun" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-100 hover:text-rose-600 transition-colors">
                             <i class="fa-solid fa-right-from-bracket mr-1"></i>Keluar
                         </button>
-                        <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
-                            <i class="fa-solid fa-circle-half-stroke text-lg"></i>
+                        <button onclick="toggleTheme()" title="Ganti Mode Gelap / Terang" class="p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-amber-400">
+                            <i id="theme-icon" class="fa-solid fa-moon text-base"></i>
                         </button>
                     </div>
                 </div>
@@ -227,11 +232,12 @@
                             <button onclick="mintaLokasi()" class="text-[11px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 px-2.5 py-1 rounded-lg font-bold hover:bg-emerald-200 transition-colors">Deteksi Lokasi</button>
                         </div>
 
+                        <!-- REVISI 1: Upload Foto Galeri / File / Kamera (Atribut capture dihapus) -->
                         <div class="relative">
                             <label for="input-foto" class="flex items-center justify-center cursor-pointer w-full py-2.5 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                <i class="fa-solid fa-camera mr-2 text-emerald-500"></i> Lampirkan Struk / Foto
+                                <i class="fa-solid fa-image mr-2 text-emerald-500"></i> Lampirkan Struk / Foto
                             </label>
-                            <input type="file" id="input-foto" accept="image/*" capture="environment" class="hidden" onchange="previewAndCompressFoto(event)">
+                            <input type="file" id="input-foto" accept="image/*" class="hidden" onchange="previewAndCompressFoto(event)">
                         </div>
                         
                         <div id="foto-preview-container" class="hidden relative mt-2">
@@ -251,10 +257,19 @@
                 </div>
 
                 <!-- Sync to Google Sheets -->
-                <div class="text-center fade-in">
-                    <button onclick="syncToSheets()" class="w-full py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50 rounded-xl hover:bg-emerald-100 transition-colors">
+                <div class="text-center fade-in space-y-1.5">
+                    <button onclick="syncToSheets(false)" class="w-full py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50 rounded-xl hover:bg-emerald-100 transition-colors">
                         <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Sinkronisasi ke Google Sheets
                     </button>
+                    <div class="flex items-center justify-center gap-3 text-[11px]">
+                        <button type="button" onclick="syncToSheets(true)" class="font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 underline">
+                            Kirim Ulang Semua Riwayat
+                        </button>
+                        <span class="text-slate-300 dark:text-slate-700">•</span>
+                        <button type="button" onclick="aturUrlSheets()" class="font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 underline">
+                            Atur URL Sheets
+                        </button>
+                    </div>
                     <p id="sync-status" class="text-xs mt-1.5 font-semibold hidden">Menyinkronkan...</p>
                 </div>
             </div>
@@ -362,13 +377,14 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = initializeFirestore(app, {
-    localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager()
-    })
-});
+            localCache: persistentLocalCache({
+                tabManager: persistentMultipleTabManager()
+            })
+        });
         const googleProvider = new GoogleAuthProvider();
         
-        const GOOGLE_APP_SCRIPT_URL = "URL_APPS_SCRIPT_ANDA_DISINI";
+        // Tempelkan URL Web App dari spreadsheet "KAS KEUANGAN" di sini (atau klik 'Atur URL Sheets' di aplikasi)
+        const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzEd5cWhK439eZRYAJXoRvBQX0L1t-_Rcu0gSZStzuNSkI0x_q15qRzWYmzqkosxlR7Ig/exec";
 
         let currentTab = 'Pribadi';
         let jenisTx = 'Pengeluaran';
@@ -393,6 +409,27 @@
                 Pengeluaran: ['Sewa Alat', 'Transport Job', 'Honor Crew', 'Makan Crew', 'Bensin Operational'],
                 Pemasukan: ['DP Klien', 'Pelunasan', 'Jasa Edit', 'Sewa Equipment']
             }
+        };
+
+        // --- REVISI 3: THEME DARK / LIGHT MODE YANG BERFUNGSI & TERSIMPAN ---
+        function applyTheme(theme) {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (theme === 'dark') {
+                html.classList.remove('light');
+                html.classList.add('dark');
+                if (icon) icon.className = "fa-solid fa-sun text-base text-amber-400";
+            } else {
+                html.classList.remove('dark');
+                html.classList.add('light');
+                if (icon) icon.className = "fa-solid fa-moon text-base";
+            }
+            localStorage.setItem('mulaeTheme', theme);
+        }
+
+        window.toggleTheme = function() {
+            const isDark = document.documentElement.classList.contains('dark');
+            applyTheme(isDark ? 'light' : 'dark');
         };
 
         // --- AUTHENTICATION & TRUST DEVICE CHECK ---
@@ -537,6 +574,24 @@
             return new Intl.NumberFormat('id-ID').format(angka);
         }
 
+        // --- REVISI 2: HELPER TIMESTAMP KRONOLOGIS (BACKDATE AMAN) ---
+        function getEventTimestamp(t) {
+            if (t.txTimestamp && !isNaN(Number(t.txTimestamp))) {
+                return Number(t.txTimestamp);
+            }
+            if (t.isoWaktu) {
+                const parsed = new Date(t.isoWaktu).getTime();
+                if (!isNaN(parsed)) return parsed;
+            }
+            if (t.thnAngka !== undefined && t.blnAngka !== undefined && t.tglAngka !== undefined) {
+                const timeParts = String(t.waktu || "00:00").replace(".", ":").split(":");
+                const hh = parseInt(timeParts[0], 10) || 0;
+                const mm = parseInt(timeParts[1], 10) || 0;
+                return new Date(t.thnAngka, t.blnAngka, t.tglAngka, hh, mm).getTime();
+            }
+            return Number(t.id) || 0;
+        }
+
         // --- APPLICATION LOGIC ---
         window.setWaktuSekarang = function() {
             const now = new Date();
@@ -544,8 +599,6 @@
             const localISOTime = (new Date(now - tzOffset)).toISOString().slice(0, 16);
             document.getElementById('input-waktu').value = localISOTime;
         }
-
-        window.toggleTheme = function() { document.documentElement.classList.toggle('dark'); }
 
         window.switchTab = function(tab) {
             currentTab = tab;
@@ -687,6 +740,7 @@
             document.getElementById('btn-simpan').disabled = true;
 
             const dateObj = inputWaktu ? new Date(inputWaktu) : new Date();
+            const txTimestamp = dateObj.getTime();
             const bulanStr = dateObj.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
             const tanggalStr = dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
             const waktuStr = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
@@ -698,6 +752,7 @@
                 waktu: waktuStr, 
                 bulan: bulanStr,
                 isoWaktu: inputWaktu,
+                txTimestamp: txTimestamp,
                 tglAngka: dateObj.getDate(),
                 blnAngka: dateObj.getMonth(),
                 thnAngka: dateObj.getFullYear(),
@@ -779,6 +834,7 @@
                         waktu: dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), 
                         bulan: dateObj.toLocaleString('id-ID', { month: 'long', year: 'numeric' }),
                         isoWaktu: (new Date(dateObj - dateObj.getTimezoneOffset() * 60000)).toISOString().slice(0, 16),
+                        txTimestamp: dateObj.getTime(),
                         tglAngka: dateObj.getDate(), blnAngka: dateObj.getMonth(), thnAngka: dateObj.getFullYear(),
                         entitas: tx.entitas, jenis: 'Pengeluaran', sifat: 'Produktif', 
                         nominal: tx.nominal, keterangan: "Pelunasan Hutang: " + tx.keterangan,
@@ -838,11 +894,10 @@
                 else if(t.jenis === 'Pengeluaran') {
                     calKeluar += t.nominal;
                     if(t.sifat === 'Self-Reward') totalSelfReward += t.nominal;
-                    else totalProduktif += t.nominal; // Default dianggap produktif
+                    else totalProduktif += t.nominal;
                 }
             });
 
-            // Persentase & Render Bar Split
             const totalKeluarBulanIni = totalProduktif + totalSelfReward;
             let pctProd = 0, pctSelf = 0;
             if(totalKeluarBulanIni > 0) {
@@ -902,7 +957,7 @@
                 `;
             }
 
-            // 6. Render Detail List Transaksi
+            // 6. Render Detail List Transaksi (OTOMATIS URUT KRONOLOGIS TANGGAL & JAM KEJADIAN)
             const listDetail = document.getElementById('history-list-detail');
             listDetail.innerHTML = '';
 
@@ -915,6 +970,13 @@
                 document.getElementById('selected-date-label').innerText = `Semua Transaksi (${monthName})`;
                 document.getElementById('btn-reset-filter').classList.add('hidden');
             }
+
+            // Urutkan otomatis berdasarkan tanggal & jam kejadian (walaupun catatan kemarin diinput hari ini)
+            dataFiltered = [...dataFiltered].sort((a, b) => {
+                const diff = getEventTimestamp(b) - getEventTimestamp(a);
+                if (diff !== 0) return diff;
+                return (Number(b.id) || 0) - (Number(a.id) || 0);
+            });
 
             if(dataFiltered.length === 0) {
                 listDetail.innerHTML = `<p class="text-xs text-center py-4 font-semibold text-slate-400">Tidak ada transaksi pada periode ini.</p>`;
@@ -967,40 +1029,86 @@
             kalkulasiDanRender();
         }
 
-        window.syncToSheets = async function() {
-            const unsynced = dataTransaksi.filter(t => !t.syncStatus);
-            if (unsynced.length === 0) return alert("Semua data sudah tersinkronisasi ke Google Sheets.");
+        // --- REVISI 4: SINKRONISASI KE SPREADSHEET BARU ("KAS KEUANGAN") ---
+        function getGasUrl() {
+            const saved = localStorage.getItem('mulaeGasUrl');
+            if (saved && saved.startsWith('http')) return saved;
+            return GOOGLE_APP_SCRIPT_URL;
+        }
+
+        window.aturUrlSheets = function() {
+            const currentUrl = localStorage.getItem('mulaeGasUrl') || '';
+            const baru = prompt("Tempelkan URL Web App Google Apps Script dari spreadsheet KAS KEUANGAN:", currentUrl);
+            if (baru !== null && baru.trim() !== "") {
+                localStorage.setItem('mulaeGasUrl', baru.trim());
+                alert("URL Google Sheets KAS KEUANGAN berhasil disimpan!");
+            }
+        }
+
+        window.syncToSheets = async function(forceAll = false) {
+            const targetList = forceAll ? dataTransaksi : dataTransaksi.filter(t => !t.syncStatus);
+            if (targetList.length === 0) return alert("Semua data sudah tersinkronisasi ke Google Sheets.");
             
+            const scriptUrl = getGasUrl();
+            if (!scriptUrl || scriptUrl === "URL_APPS_SCRIPT_ANDA_DISINI") {
+                aturUrlSheets();
+                return;
+            }
+
             const status = document.getElementById('sync-status');
             status.classList.remove('hidden');
             status.className = "text-xs mt-1.5 font-semibold text-emerald-600 block";
-            status.innerText = "Mengirim " + unsynced.length + " data...";
-
-            if(GOOGLE_APP_SCRIPT_URL === "URL_APPS_SCRIPT_ANDA_DISINI") return alert("URL Google Apps Script belum diisi.");
+            status.innerText = "Mengirim " + targetList.length + " data ke KAS KEUANGAN...";
 
             try {
-                const safePayload = unsynced.map(t => ({
-                    ...t,
+                const safePayload = targetList.map(t => ({
+                    tanggal: t.tanggal,
+                    waktu: t.waktu,
+                    bulan: t.bulan,
+                    isoWaktu: t.isoWaktu || "",
+                    txTimestamp: getEventTimestamp(t),
+                    entitas: t.entitas === 'Bisnis' ? 'Mulae.Production' : 'Pribadi',
+                    jenis: t.jenis,
+                    sifat: t.sifat || '-',
+                    nominal: Number(t.nominal) || 0,
+                    keterangan: t.keterangan || '-',
                     foto: t.foto ? "Ada Lampiran" : "Tidak Ada",
                     lokasi: t.lokasi || "Tidak Ada Lokasi",
-                    statusHutang: t.jenis === 'Hutang' ? (t.isLunas ? 'Lunas' : 'Belum Lunas') : '-',
-                    sifat: t.sifat || '-'
+                    statusHutang: t.jenis === 'Hutang' ? (t.isLunas ? 'Lunas' : 'Belum Lunas') : '-'
                 }));
 
-                const response = await fetch(GOOGLE_APP_SCRIPT_URL, {
-                    method: 'POST', body: JSON.stringify(safePayload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                await fetch(scriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        mode: forceAll ? 'replace' : 'append',
+                        transactions: safePayload
+                    })
                 });
                 
-                if (response.ok) {
-                    for(let t of unsynced) { await updateDoc(doc(db, "transactions", t.docId), { syncStatus: true }); }
-                    status.className = "text-xs mt-1.5 font-semibold text-emerald-600 block";
-                    status.innerText = "Selesai menyinkronkan!";
-                    setTimeout(() => status.classList.add('hidden'), 2500);
+                for (let t of targetList) {
+                    if (!t.syncStatus) {
+                        await updateDoc(doc(db, "transactions", t.docId), { syncStatus: true });
+                    }
                 }
+                status.className = "text-xs mt-1.5 font-semibold text-emerald-600 block";
+                status.innerText = "Selesai menyinkronkan ke KAS KEUANGAN!";
+                setTimeout(() => status.classList.add('hidden'), 3000);
             } catch (error) {
                 status.className = "text-xs mt-1.5 font-semibold text-rose-600 block";
                 status.innerText = "Error koneksi internet.";
             }
+        }
+
+        // Inisialisasi Tema Awal
+        const savedTheme = localStorage.getItem('mulaeTheme');
+        if (savedTheme) {
+            applyTheme(savedTheme);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            applyTheme('dark');
+        } else {
+            applyTheme('light');
         }
 
         setWaktuSekarang();
@@ -1009,7 +1117,6 @@
         if(isPrivacyMode) {
             document.getElementById('privacy-icon').className = "fa-solid fa-eye-slash text-sm text-emerald-600";
         }
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
     </script>
 </body>
 </html>
