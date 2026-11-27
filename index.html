@@ -199,9 +199,17 @@
                         <button onclick="setJenis('Hutang')" id="btn-hutang" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-inactive">Catat Hutang</button>
                     </div>
 
-                    <div id="panel-sifat" class="flex gap-2 mb-4">
-                        <button onclick="setSifat('Produktif')" id="btn-produktif" class="flex-1 py-1.5 text-xs font-semibold rounded-lg border-2 border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 transition-all">💡 Produktif</button>
-                        <button onclick="setSifat('Self-Reward')" id="btn-selfreward" class="flex-1 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-400 hover:text-fuchsia-600 transition-all">🎉 Self-Reward</button>
+                    <!-- Panel Sifat Pengeluaran -->
+                    <div id="panel-sifat" class="space-y-2 mb-4">
+                        <div class="flex gap-2">
+                            <button onclick="setSifat('Produktif')" id="btn-produktif" class="flex-1 py-1.5 text-xs font-semibold rounded-lg border-2 border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 transition-all">💡 Produktif</button>
+                            <button onclick="setSifat('Self-Reward')" id="btn-selfreward" class="flex-1 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-fuchsia-600 transition-all">🎉 Self-Reward</button>
+                        </div>
+                        <!-- Tambahan Khusus Tab Mulae.Production -->
+                        <div id="panel-sifat-mulae" class="hidden grid grid-cols-2 gap-2">
+                            <button onclick="setSifat('Beban Produksi')" id="btn-bebanproduksi" class="w-full py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-sky-600 transition-all">🎬 Beban Produksi</button>
+                            <button onclick="setSifat('Beli Alat')" id="btn-belialat" class="w-full py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-amber-600 transition-all">📷 Beli Alat</button>
+                        </div>
                     </div>
 
                     <div class="space-y-3.5">
@@ -232,7 +240,7 @@
                             <button onclick="mintaLokasi()" class="text-[11px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 px-2.5 py-1 rounded-lg font-bold hover:bg-emerald-200 transition-colors">Deteksi Lokasi</button>
                         </div>
 
-                        <!-- REVISI 1: Upload Foto Galeri / File / Kamera (Atribut capture dihapus) -->
+                        <!-- Upload Foto Galeri / File / Kamera -->
                         <div class="relative">
                             <label for="input-foto" class="flex items-center justify-center cursor-pointer w-full py-2.5 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                 <i class="fa-solid fa-image mr-2 text-emerald-500"></i> Lampirkan Struk / Foto
@@ -277,7 +285,7 @@
             <!-- KOLOM KANAN (ANALITIK, KALENDER, DETAIL ARSIP BULAN) -->
             <div class="lg:col-span-7 space-y-5">
                 
-                <!-- KARTU ANALITIK PENGELUARAN (PRODUKTIF VS SELF-REWARD) -->
+                <!-- KARTU ANALITIK PENGELUARAN -->
                 <div class="glass-card p-5 fade-in space-y-4">
                     <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
                         <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-2">
@@ -286,7 +294,7 @@
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500" id="analytics-month-tag">Bulan Ini</span>
                     </div>
 
-                    <!-- Progress Bar Dual Color -->
+                    <!-- Progress Bar Multi-Segmen -->
                     <div class="space-y-1.5">
                         <div class="flex justify-between text-xs font-bold">
                             <span class="text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-circle text-[8px] mr-1"></i> Produktif (<span id="pct-produktif">0%</span>)</span>
@@ -295,6 +303,12 @@
                         <div class="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
                             <div id="bar-produktif" class="bg-emerald-500 h-full transition-all duration-500" style="width: 50%"></div>
                             <div id="bar-selfreward" class="bg-fuchsia-500 h-full transition-all duration-500" style="width: 50%"></div>
+                            <div id="bar-bebanproduksi" class="bg-sky-500 h-full transition-all duration-500" style="width: 0%"></div>
+                            <div id="bar-belialat" class="bg-amber-500 h-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                        <div id="label-rasio-mulae" class="hidden flex justify-between text-[11px] font-bold pt-0.5">
+                            <span class="text-sky-600 dark:text-sky-400"><i class="fa-solid fa-circle text-[8px] mr-1"></i> Beban Produksi (<span id="pct-bebanproduksi">0%</span>)</span>
+                            <span class="text-amber-600 dark:text-amber-400">Beli Alat (<span id="pct-belialat">0%</span>) <i class="fa-solid fa-circle text-[8px] ml-1"></i></span>
                         </div>
                     </div>
 
@@ -307,6 +321,18 @@
                         <div class="bg-fuchsia-50 dark:bg-fuchsia-950/30 border border-fuchsia-100 dark:border-fuchsia-900/50 p-3 rounded-xl">
                             <p class="text-[10px] font-bold text-fuchsia-700 dark:text-fuchsia-400 uppercase">🎉 Self-Reward</p>
                             <p class="text-sm font-extrabold text-fuchsia-900 dark:text-fuchsia-200 mt-0.5" id="val-selfreward">Rp0</p>
+                        </div>
+                    </div>
+
+                    <!-- Kartu Tambahan Khusus Mulae.Production -->
+                    <div id="analytics-mulae-extra" class="hidden grid grid-cols-2 gap-3">
+                        <div class="bg-sky-50 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/50 p-3 rounded-xl">
+                            <p class="text-[10px] font-bold text-sky-700 dark:text-sky-400 uppercase">🎬 Beban Produksi</p>
+                            <p class="text-sm font-extrabold text-sky-900 dark:text-sky-200 mt-0.5" id="val-bebanproduksi">Rp0</p>
+                        </div>
+                        <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/50 p-3 rounded-xl">
+                            <p class="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase">📷 Beli Alat</p>
+                            <p class="text-sm font-extrabold text-amber-900 dark:text-amber-200 mt-0.5" id="val-belialat">Rp0</p>
                         </div>
                     </div>
                 </div>
@@ -383,8 +409,7 @@
         });
         const googleProvider = new GoogleAuthProvider();
         
-        // Tempelkan URL Web App dari spreadsheet "KAS KEUANGAN" di sini (atau klik 'Atur URL Sheets' di aplikasi)
-        const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzEd5cWhK439eZRYAJXoRvBQX0L1t-_Rcu0gSZStzuNSkI0x_q15qRzWYmzqkosxlR7Ig/exec";
+        const GOOGLE_APP_SCRIPT_URL = "URL_APPS_SCRIPT_ANDA_DISINI";
 
         let currentTab = 'Pribadi';
         let jenisTx = 'Pengeluaran';
@@ -411,7 +436,6 @@
             }
         };
 
-        // --- REVISI 3: THEME DARK / LIGHT MODE YANG BERFUNGSI & TERSIMPAN ---
         function applyTheme(theme) {
             const html = document.documentElement;
             const icon = document.getElementById('theme-icon');
@@ -432,7 +456,6 @@
             applyTheme(isDark ? 'light' : 'dark');
         };
 
-        // --- AUTHENTICATION & TRUST DEVICE CHECK ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
@@ -466,7 +489,6 @@
             });
         }
 
-        // --- AUTH HANDLERS ---
         window.handleGoogleLogin = async function() {
             const errEl = document.getElementById('auth-error');
             errEl.classList.add('hidden');
@@ -525,7 +547,6 @@
             }
         }
 
-        // --- PIN & PRIVACY HANDLERS ---
         window.verifyPin = function() {
             const inputPin = document.getElementById('pin-input').value;
             const savedPin = localStorage.getItem('mulaePin');
@@ -574,7 +595,6 @@
             return new Intl.NumberFormat('id-ID').format(angka);
         }
 
-        // --- REVISI 2: HELPER TIMESTAMP KRONOLOGIS (BACKDATE AMAN) ---
         function getEventTimestamp(t) {
             if (t.txTimestamp && !isNaN(Number(t.txTimestamp))) {
                 return Number(t.txTimestamp);
@@ -592,7 +612,6 @@
             return Number(t.id) || 0;
         }
 
-        // --- APPLICATION LOGIC ---
         window.setWaktuSekarang = function() {
             const now = new Date();
             const tzOffset = now.getTimezoneOffset() * 60000;
@@ -602,23 +621,48 @@
 
         window.switchTab = function(tab) {
             currentTab = tab;
+            const isMulae = tab === 'Bisnis';
+
             document.getElementById('btn-pribadi').className = tab === 'Pribadi' ? "flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-active" : "flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-inactive";
-            document.getElementById('btn-bisnis').className = tab === 'Bisnis' ? "flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-active" : "flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-inactive";
+            document.getElementById('btn-bisnis').className = isMulae ? "flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-active" : "flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-inactive";
+
+            // Tampilkan opsi Beban Produksi & Beli Alat khusus di tab Mulae.Production
+            document.getElementById('panel-sifat-mulae').classList.toggle('hidden', !isMulae);
+            document.getElementById('analytics-mulae-extra').classList.toggle('hidden', !isMulae);
+            document.getElementById('label-rasio-mulae').classList.toggle('hidden', !isMulae);
+
+            // Jika kembali ke tab Pribadi saat pilihan masih Beban Produksi / Beli Alat, kembalikan ke Produktif
+            if (!isMulae && (sifatTx === 'Beban Produksi' || sifatTx === 'Beli Alat')) {
+                setSifat('Produktif');
+            }
+
             renderChips();
             kalkulasiDanRender();
         }
 
         window.setSifat = function(sifat) {
             sifatTx = sifat;
+            const inactiveClass = "flex-1 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 transition-all";
+            const inactiveGridClass = "w-full py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 transition-all";
+
             const btnProd = document.getElementById('btn-produktif');
             const btnSelf = document.getElementById('btn-selfreward');
+            const btnProdBeban = document.getElementById('btn-bebanproduksi');
+            const btnAlat = document.getElementById('btn-belialat');
 
-            if(sifat === 'Produktif') {
+            btnProd.className = inactiveClass + " hover:text-emerald-600";
+            btnSelf.className = inactiveClass + " hover:text-fuchsia-600";
+            btnProdBeban.className = inactiveGridClass + " hover:text-sky-600";
+            btnAlat.className = inactiveGridClass + " hover:text-amber-600";
+
+            if (sifat === 'Produktif') {
                 btnProd.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg border-2 border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 transition-all";
-                btnSelf.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-400 hover:text-fuchsia-600 transition-all";
-            } else {
+            } else if (sifat === 'Self-Reward') {
                 btnSelf.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg border-2 border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 dark:border-fuchsia-800 dark:bg-fuchsia-950/40 dark:text-fuchsia-300 transition-all";
-                btnProd.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-400 hover:text-emerald-600 transition-all";
+            } else if (sifat === 'Beban Produksi') {
+                btnProdBeban.className = "w-full py-1.5 text-xs font-semibold rounded-lg border-2 border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300 transition-all";
+            } else if (sifat === 'Beli Alat') {
+                btnAlat.className = "w-full py-1.5 text-xs font-semibold rounded-lg border-2 border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300 transition-all";
             }
         }
 
@@ -628,7 +672,7 @@
             document.getElementById('btn-masuk').className = jenis === 'Pemasukan' ? "flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-active text-emerald-600 dark:text-emerald-400" : "flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-inactive";
             document.getElementById('btn-hutang').className = jenis === 'Hutang' ? "flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-active text-amber-600 dark:text-amber-400" : "flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-inactive";
             
-            document.getElementById('panel-sifat').style.display = (jenis === 'Pengeluaran') ? 'flex' : 'none';
+            document.getElementById('panel-sifat').style.display = (jenis === 'Pengeluaran') ? 'block' : 'none';
             document.getElementById('label-jenis-chip').innerText = jenis === 'Hutang' ? 'Pengeluaran' : jenis;
             
             renderChips();
@@ -884,34 +928,47 @@
                 return t.bulan === monthName;
             });
 
-            // 3. Kalkulasi Analitik Produktif vs Self-Reward
+            // 3. Kalkulasi Analitik Pengeluaran (Produktif, Self-Reward, Beban Produksi, Beli Alat)
             let totalProduktif = 0;
             let totalSelfReward = 0;
+            let totalBebanProduksi = 0;
+            let totalBeliAlat = 0;
             let calMasuk = 0, calKeluar = 0;
 
             dataBulanIni.forEach(t => {
                 if(t.jenis === 'Pemasukan') calMasuk += t.nominal;
                 else if(t.jenis === 'Pengeluaran') {
                     calKeluar += t.nominal;
-                    if(t.sifat === 'Self-Reward') totalSelfReward += t.nominal;
+                    if (t.sifat === 'Self-Reward') totalSelfReward += t.nominal;
+                    else if (t.sifat === 'Beban Produksi') totalBebanProduksi += t.nominal;
+                    else if (t.sifat === 'Beli Alat') totalBeliAlat += t.nominal;
                     else totalProduktif += t.nominal;
                 }
             });
 
-            const totalKeluarBulanIni = totalProduktif + totalSelfReward;
-            let pctProd = 0, pctSelf = 0;
-            if(totalKeluarBulanIni > 0) {
+            const totalKeluarBulanIni = totalProduktif + totalSelfReward + totalBebanProduksi + totalBeliAlat;
+            let pctProd = 0, pctSelf = 0, pctBeban = 0, pctAlat = 0;
+            if (totalKeluarBulanIni > 0) {
                 pctProd = Math.round((totalProduktif / totalKeluarBulanIni) * 100);
-                pctSelf = 100 - pctProd;
+                pctSelf = Math.round((totalSelfReward / totalKeluarBulanIni) * 100);
+                pctBeban = Math.round((totalBebanProduksi / totalKeluarBulanIni) * 100);
+                pctAlat = Math.max(0, 100 - pctProd - pctSelf - pctBeban);
             }
 
             document.getElementById('pct-produktif').innerText = pctProd + "%";
             document.getElementById('pct-selfreward').innerText = pctSelf + "%";
-            document.getElementById('bar-produktif').style.width = pctProd + "%";
-            document.getElementById('bar-selfreward').style.width = pctSelf + "%";
+            document.getElementById('pct-bebanproduksi').innerText = pctBeban + "%";
+            document.getElementById('pct-belialat').innerText = pctAlat + "%";
+
+            document.getElementById('bar-produktif').style.width = (totalKeluarBulanIni > 0 ? pctProd : 50) + "%";
+            document.getElementById('bar-selfreward').style.width = (totalKeluarBulanIni > 0 ? pctSelf : 50) + "%";
+            document.getElementById('bar-bebanproduksi').style.width = (totalKeluarBulanIni > 0 ? pctBeban : 0) + "%";
+            document.getElementById('bar-belialat').style.width = (totalKeluarBulanIni > 0 ? pctAlat : 0) + "%";
 
             document.getElementById('val-produktif').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(totalProduktif);
             document.getElementById('val-selfreward').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(totalSelfReward);
+            document.getElementById('val-bebanproduksi').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(totalBebanProduksi);
+            document.getElementById('val-belialat').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(totalBeliAlat);
 
             // 4. Rekap Bulanan Kalender
             document.getElementById('cal-rekap-masuk').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(calMasuk);
@@ -971,7 +1028,6 @@
                 document.getElementById('btn-reset-filter').classList.add('hidden');
             }
 
-            // Urutkan otomatis berdasarkan tanggal & jam kejadian (walaupun catatan kemarin diinput hari ini)
             dataFiltered = [...dataFiltered].sort((a, b) => {
                 const diff = getEventTimestamp(b) - getEventTimestamp(a);
                 if (diff !== 0) return diff;
@@ -1003,6 +1059,8 @@
                 let sifatBadge = '';
                 if(t.sifat === 'Produktif') sifatBadge = `<span class="text-[9px] bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 ml-1.5 font-bold">💡 Produktif</span>`;
                 if(t.sifat === 'Self-Reward') sifatBadge = `<span class="text-[9px] bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/60 dark:text-fuchsia-300 px-1.5 py-0.5 rounded border border-fuchsia-200 dark:border-fuchsia-800 ml-1.5 font-bold">🎉 Self-Reward</span>`;
+                if(t.sifat === 'Beban Produksi') sifatBadge = `<span class="text-[9px] bg-sky-50 text-sky-600 dark:bg-sky-950/60 dark:text-sky-300 px-1.5 py-0.5 rounded border border-sky-200 dark:border-sky-800 ml-1.5 font-bold">🎬 Beban Produksi</span>`;
+                if(t.sifat === 'Beli Alat') sifatBadge = `<span class="text-[9px] bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-300 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800 ml-1.5 font-bold">📷 Beli Alat</span>`;
 
                 listDetail.innerHTML += `
                     <div class="glass-card p-3 flex gap-3 items-start fade-in">
@@ -1029,7 +1087,6 @@
             kalkulasiDanRender();
         }
 
-        // --- REVISI 4: SINKRONISASI KE SPREADSHEET BARU ("KAS KEUANGAN") ---
         function getGasUrl() {
             const saved = localStorage.getItem('mulaeGasUrl');
             if (saved && saved.startsWith('http')) return saved;
@@ -1101,7 +1158,6 @@
             }
         }
 
-        // Inisialisasi Tema Awal
         const savedTheme = localStorage.getItem('mulaeTheme');
         if (savedTheme) {
             applyTheme(savedTheme);
