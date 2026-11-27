@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kas Mulae.Production</title>
+    
+    <!-- PWA Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='128' fill='%23053c29'/><path d='M120 370V140h45l75 125 75-125h45v230h-45V220l-75 125-75-125v150z' fill='%23ffffff'/><rect x='340' y='270' width='30' height='100' rx='6' fill='%2334d399'/><rect x='290' y='300' width='30' height='70' rx='6' fill='%2310b981'/><rect x='240' y='330' width='30' height='40' rx='6' fill='%23059669'/></svg>">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        };
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+        .theme-transition { transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
+        
+        .glass-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+            border-radius: 16px;
+        }
+        .dark .glass-card { 
+            background: #1e293b; 
+            border: 1px solid #334155; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); 
+        }
+
+        .segmented-control { background-color: #f1f5f9; border-radius: 12px; padding: 4px; }
+        .dark .segmented-control { background-color: #0f172a; }
+        
+        .tab-active { background-color: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); color: #0f172a; }
+        .dark .tab-active { background-color: #1e293b; color: #f8fafc; }
+        .tab-inactive { color: #64748b; }
+        .dark .tab-inactive { color: #94a3b8; }
+
+        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: translateY(0); } }
+        
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .day-tile {
+            aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-radius: 10px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; position: relative;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 theme-transition pb-24 min-h-screen">
+
+    <!-- OVERLAY 1: FIREBASE AUTH LOGIN MODAL -->
+    <div id="auth-overlay" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-sm p-6 space-y-4 text-center">
+            
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-950 p-2 shadow-lg flex items-center justify-center border border-emerald-600/30">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-full h-full">
+                    <path d="M100 380V130h50l80 135 80-135h50v250h-50V210l-80 135-80-135v170z" fill="#ffffff"/>
+                    <rect x="340" y="260" width="32" height="120" rx="6" fill="#34d399"/>
+                    <rect x="290" y="290" width="32" height="90" rx="6" fill="#10b981"/>
+                    <rect x="240" y="330" width="32" height="50" rx="6" fill="#059669"/>
+                </svg>
+            </div>
+
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white">Buku Kas Mulae</h2>
+            <p class="text-xs text-slate-500">Silakan login untuk membuka server data terproteksi</p>
+            
+            <button onclick="handleGoogleLogin()" class="w-full flex items-center justify-center gap-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl py-3 text-xs font-bold shadow-sm transition-all">
+                <svg class="w-4 h-4" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+                Masuk dengan Google (Gmail)
+            </button>
+
+            <div class="relative flex py-1 items-center">
+                <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+                <span class="flex-shrink mx-2 text-[10px] font-bold text-slate-400 uppercase">atau email</span>
+                <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+            </div>
+
+            <div class="space-y-3 text-left">
+                <div>
+                    <label class="text-[11px] font-bold text-slate-500">Email</label>
+                    <input type="email" id="auth-email" placeholder="email@domain.com" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div>
+                    <label class="text-[11px] font-bold text-slate-500">Password</label>
+                    <input type="password" id="auth-password" placeholder="••••••••" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-1">
+                <button onclick="handleLogin()" id="btn-login" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-2.5 text-xs font-bold shadow transition-all">Login</button>
+                <button onclick="handleRegister()" class="flex-1 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl py-2.5 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">Daftar</button>
+            </div>
+            <p id="auth-error" class="text-[11px] text-rose-500 font-bold hidden"></p>
+        </div>
+    </div>
+
+    <!-- OVERLAY 2: PIN LOCK MODAL (TRUST DEVICE) -->
+    <div id="pin-overlay" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-40 flex items-center justify-center p-4 hidden">
+        <div class="glass-card w-full max-w-sm p-6 text-center space-y-4">
+            <i class="fa-solid fa-shield-halved text-3xl text-emerald-500"></i>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Masukkan PIN Keamanan</h3>
+            <p class="text-xs text-slate-500">Perangkat memerlukan verifikasi PIN</p>
+            
+            <input type="password" id="pin-input" maxlength="6" placeholder="••••" class="w-full text-center tracking-[1em] text-2xl font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-3 outline-none focus:ring-2 focus:ring-emerald-500">
+
+            <div class="flex items-center justify-center gap-2 text-xs font-semibold text-slate-500">
+                <input type="checkbox" id="trust-device-check" class="rounded text-emerald-600 focus:ring-emerald-500">
+                <label for="trust-device-check">Ingat perangkat ini (Trust Device)</label>
+            </div>
+
+            <button onclick="verifyPin()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-2.5 text-xs font-bold shadow transition-all">Buka Kunci</button>
+            <p id="pin-error" class="text-xs text-rose-500 font-bold hidden">PIN salah!</p>
+        </div>
+    </div>
+
+    <!-- OVERLAY 3: MODAL CICIL HUTANG -->
+    <div id="cicil-overlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-40 flex items-center justify-center p-4 hidden">
+        <div class="glass-card w-full max-w-sm p-5 space-y-4 fade-in">
+            <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                        <i class="fa-solid fa-coins text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">Cicil Hutang</h3>
+                        <p id="cicil-judul-hutang" class="text-[11px] font-semibold text-slate-500 truncate max-w-[200px]">-</p>
+                    </div>
+                </div>
+                <button onclick="tutupModalCicil()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Ringkasan Hutang -->
+            <div class="bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 rounded-xl p-3 space-y-1 text-xs">
+                <div class="flex justify-between">
+                    <span class="text-slate-500 dark:text-slate-400">Hutang Awal:</span>
+                    <span id="cicil-info-awal" class="font-bold text-slate-700 dark:text-slate-200">Rp0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-500 dark:text-slate-400">Sudah Dibayar:</span>
+                    <span id="cicil-info-terbayar" class="font-bold text-emerald-600 dark:text-emerald-400">Rp0</span>
+                </div>
+                <div class="flex justify-between border-t border-amber-200/70 dark:border-amber-800/50 pt-1 mt-1">
+                    <span class="font-bold text-amber-700 dark:text-amber-300">Sisa Hutang:</span>
+                    <span id="cicil-info-sisa" class="font-extrabold text-amber-700 dark:text-amber-300">Rp0</span>
+                </div>
+            </div>
+
+            <!-- Form Input Cicilan -->
+            <div class="space-y-3">
+                <div>
+                    <label class="text-[11px] font-bold text-slate-500 block mb-1">Tanggal & Waktu Bayar Cicilan</label>
+                    <div class="relative">
+                        <span class="absolute left-3.5 top-2.5 text-slate-400 text-xs"><i class="fa-solid fa-clock"></i></span>
+                        <input type="datetime-local" id="cicil-waktu" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-2 pl-9 pr-3 font-semibold text-xs outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700 dark:text-slate-200">
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-[11px] font-bold text-slate-500">Nominal Cicilan</label>
+                        <div class="flex gap-1.5">
+                            <button type="button" onclick="isiCicilSetengah()" class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-emerald-100 hover:text-emerald-700">50%</button>
+                            <button type="button" onclick="isiCicilPenuh()" class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 hover:bg-amber-200">Lunas Sisa</button>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <span class="absolute left-3.5 top-2.5 text-slate-400 font-bold text-xs">Rp</span>
+                        <input type="text" inputmode="text" id="cicil-nominal" placeholder="0 atau 250.000 + 250.000" oninput="onCicilNominalInput()" onblur="selesaikanHitungCicil()" onkeydown="handleCalcKeydown(event, 'cicil')" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-2 pl-9 pr-24 font-bold text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500">
+                        <span id="cicil-calc-preview" class="hidden absolute right-3 top-2.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400"></span>
+                    </div>
+                    <div class="flex gap-1 mt-1.5">
+                        <button type="button" onclick="sisipOperator('cicil', ' + ')" class="flex-1 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-xs font-bold text-slate-600 dark:text-slate-300">+</button>
+                        <button type="button" onclick="sisipOperator('cicil', ' - ')" class="flex-1 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-xs font-bold text-slate-600 dark:text-slate-300">−</button>
+                        <button type="button" onclick="sisipOperator('cicil', ' * ')" class="flex-1 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-xs font-bold text-slate-600 dark:text-slate-300">×</button>
+                        <button type="button" onclick="sisipOperator('cicil', ' / ')" class="flex-1 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-xs font-bold text-slate-600 dark:text-slate-300">÷</button>
+                        <button type="button" onclick="selesaikanHitungCicil()" class="flex-1 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white">=</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold text-slate-500 block mb-1">Catatan Cicilan (Opsional)</label>
+                    <input type="text" id="cicil-catatan" placeholder="Contoh: Cicilan ke-1, Transfer BCA..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+            </div>
+
+            <p id="cicil-error" class="text-[11px] text-rose-500 font-bold hidden"></p>
+
+            <div class="flex gap-2 pt-1">
+                <button type="button" onclick="tutupModalCicil()" class="w-1/3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl py-2.5 text-xs font-bold">Batal</button>
+                <button type="button" id="btn-simpan-cicil" onclick="simpanCicilan()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-2.5 text-xs font-bold shadow transition-all">Simpan Cicilan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTAINER UTAMA (RESPONSIVE DESKTOP MACBOOK LAYOUT) -->
+    <div class="max-w-md lg:max-w-6xl mx-auto pt-6 px-4">
+        
+        <!-- GRID DUA KOLOM UNTUK DESKTOP / MACBOOK -->
+        <div class="lg:grid lg:grid-cols-12 lg:gap-6 space-y-5 lg:space-y-0">
+            
+            <!-- KOLOM KIRI (HEADER, INPUT FORM, DASHBOARD SALDO) -->
+            <div class="lg:col-span-5 space-y-5">
+                
+                <!-- Header Top Bar -->
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-950 p-1.5 flex items-center justify-center shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-full h-full">
+                                <path d="M100 380V130h50l80 135 80-135h50v250h-50V210l-80 135-80-135v170z" fill="#ffffff"/>
+                                <rect x="340" y="260" width="32" height="120" rx="6" fill="#34d399"/>
+                                <rect x="290" y="290" width="32" height="90" rx="6" fill="#10b981"/>
+                                <rect x="240" y="330" width="32" height="50" rx="6" fill="#059669"/>
+                            </svg>
+                        </div>
+                        <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Buku Kas</h1>
+                    </div>
+                    
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="togglePrivacyMode()" title="Mode Privasi Nominal" class="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-colors">
+                            <i id="privacy-icon" class="fa-solid fa-eye text-sm"></i>
+                        </button>
+                        <button onclick="setupPinModal()" title="Setel PIN Keamanan" class="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-colors">
+                            <i class="fa-solid fa-key text-sm"></i>
+                        </button>
+                        <button onclick="handleLogout()" title="Logout Akun" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-100 hover:text-rose-600 transition-colors">
+                            <i class="fa-solid fa-right-from-bracket mr-1"></i>Keluar
+                        </button>
+                        <button onclick="toggleTheme()" title="Ganti Mode Gelap / Terang" class="p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-amber-400">
+                            <i id="theme-icon" class="fa-solid fa-moon text-base"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Segmented Tab Control (Pribadi vs Bisnis) -->
+                <div class="segmented-control flex gap-1">
+                    <button onclick="switchTab('Pribadi')" id="btn-pribadi" class="flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-active">Pribadi</button>
+                    <button onclick="switchTab('Bisnis')" id="btn-bisnis" class="flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-inactive">Mulae.Production</button>
+                </div>
+
+                <!-- Dashboard Grand Total Saldo -->
+                <div class="glass-card p-5 fade-in">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Total Saldo Kas</p>
+                            <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight" id="sisa-saldo">Rp0</h2>
+                        </div>
+                        <div class="text-right bg-amber-50 dark:bg-amber-950/40 p-2 px-3 rounded-xl border border-amber-200/80 dark:border-amber-800/50">
+                            <p class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-0.5">Hutang Aktif</p>
+                            <p class="font-bold text-sm text-amber-700 dark:text-amber-300" id="total-hutang">Rp0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-3 mt-1">
+                        <div>
+                            <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5"><i class="fa-solid fa-arrow-down-long text-emerald-500 mr-1"></i> Total Masuk</p>
+                            <p class="font-bold text-emerald-600 dark:text-emerald-400 text-sm" id="total-masuk">Rp0</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5"><i class="fa-solid fa-arrow-up-long text-rose-500 mr-1"></i> Total Keluar</p>
+                            <p class="font-bold text-rose-600 dark:text-rose-400 text-sm" id="total-keluar">Rp0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Input Transaksi -->
+                <div class="glass-card p-5 fade-in" id="form-section">
+                    <div class="segmented-control flex gap-1 mb-3">
+                        <button onclick="setJenis('Pengeluaran')" id="btn-keluar" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-active text-rose-600">Pengeluaran</button>
+                        <button onclick="setJenis('Pemasukan')" id="btn-masuk" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-inactive">Pemasukan</button>
+                        <button onclick="setJenis('Hutang')" id="btn-hutang" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-inactive">Catat Hutang</button>
+                    </div>
+
+                    <!-- Panel Sifat Pengeluaran & Hutang -->
+                    <div id="panel-sifat" class="space-y-2 mb-4">
+                        <div class="flex gap-2">
+                            <button onclick="setSifat('Produktif')" id="btn-produktif" class="flex-1 py-1.5 text-xs font-semibold rounded-lg border-2 border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 transition-all">💡 Produktif</button>
+                            <button onclick="setSifat('Self-Reward')" id="btn-selfreward" class="flex-1 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-fuchsia-600 transition-all">🎉 Self-Reward</button>
+                        </div>
+                        <!-- Tambahan Khusus Tab Mulae.Production -->
+                        <div id="panel-sifat-mulae" class="hidden grid grid-cols-2 gap-2">
+                            <button onclick="setSifat('Beban Produksi')" id="btn-bebanproduksi" class="w-full py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-sky-600 transition-all">🎬 Beban Produksi</button>
+                            <button onclick="setSifat('Beli Alat')" id="btn-belialat" class="w-full py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-amber-600 transition-all">📷 Beli Alat</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3.5">
+                        <div class="relative">
+                            <span class="absolute left-3.5 top-3 text-slate-400 text-sm"><i class="fa-solid fa-clock"></i></span>
+                            <input type="datetime-local" id="input-waktu" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 pl-10 pr-3 font-semibold text-xs outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow text-slate-700 dark:text-slate-200">
+                        </div>
+
+                        <!-- Input Nominal Mode Kalkulator -->
+                        <div>
+                            <div class="relative">
+                                <span class="absolute left-3.5 top-3 text-slate-400 font-bold text-sm">Rp</span>
+                                <input type="text" inputmode="text" id="input-nominal" placeholder="0 (bisa hitung: 6.000 + 6.000)" oninput="onMainNominalInput()" onblur="selesaikanHitungMain()" onkeydown="handleCalcKeydown(event, 'main')" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 pl-10 pr-28 font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow">
+                                <span id="main-calc-preview" class="hidden absolute right-3 top-3 text-xs font-extrabold text-emerald-600 dark:text-emerald-400"></span>
+                            </div>
+                            <div class="flex items-center justify-between gap-1 mt-1.5">
+                                <div class="flex gap-1 flex-1">
+                                    <button type="button" onclick="sisipOperator('main', ' + ')" class="flex-1 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-xs font-bold text-slate-600 dark:text-slate-300 transition-colors">+</button>
+                                    <button type="button" onclick="sisipOperator('main', ' - ')" class="flex-1 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-xs font-bold text-slate-600 dark:text-slate-300 transition-colors">−</button>
+                                    <button type="button" onclick="sisipOperator('main', ' * ')" class="flex-1 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-xs font-bold text-slate-600 dark:text-slate-300 transition-colors">×</button>
+                                    <button type="button" onclick="sisipOperator('main', ' / ')" class="flex-1 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-xs font-bold text-slate-600 dark:text-slate-300 transition-colors">÷</button>
+                                    <button type="button" onclick="selesaikanHitungMain()" class="flex-1 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white transition-colors">=</button>
+                                </div>
+                            </div>
+                            <p id="main-formula-badge" class="hidden text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
+                                <i class="fa-solid fa-calculator mr-1"></i> Rincian: <span id="main-formula-text"></span>
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Pilihan Cepat (<span id="label-jenis-chip">Pengeluaran</span>)</span>
+                                <button onclick="toggleManageChips()" class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
+                                    <i class="fa-solid fa-pen-to-square"></i> Kelola
+                                </button>
+                            </div>
+                            <div id="chips-container" class="flex flex-wrap gap-1.5 text-xs font-medium"></div>
+                        </div>
+
+                        <input type="text" id="input-keterangan" placeholder="Keterangan transaksi..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow">
+                        
+                        <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-800/80 p-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <span id="lokasi-status" class="text-xs font-semibold text-slate-500"><i class="fa-solid fa-location-dot"></i> Lokasi Belum Aktif</span>
+                            <button onclick="mintaLokasi()" class="text-[11px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 px-2.5 py-1 rounded-lg font-bold hover:bg-emerald-200 transition-colors">Deteksi Lokasi</button>
+                        </div>
+
+                        <!-- Upload Foto Galeri & Kamera Langsung -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="relative">
+                                <label for="input-foto-galeri" class="flex items-center justify-center cursor-pointer w-full py-2.5 px-2 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                    <i class="fa-solid fa-images mr-1.5 text-emerald-500"></i> Pilih Galeri
+                                </label>
+                                <input type="file" id="input-foto-galeri" accept="image/*" class="hidden" onchange="previewAndCompressFoto(event)">
+                            </div>
+                            <div class="relative">
+                                <label for="input-foto-kamera" class="flex items-center justify-center cursor-pointer w-full py-2.5 px-2 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                    <i class="fa-solid fa-camera mr-1.5 text-emerald-500"></i> Foto Kamera
+                                </label>
+                                <input type="file" id="input-foto-kamera" accept="image/*" capture="environment" class="hidden" onchange="previewAndCompressFoto(event)">
+                            </div>
+                        </div>
+                        
+                        <div id="foto-preview-container" class="hidden relative mt-2">
+                            <img id="foto-preview" src="" class="w-full h-28 object-cover rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                            <button onclick="hapusFoto()" class="absolute top-2 right-2 bg-slate-900/80 backdrop-blur text-white p-1 rounded-full text-xs hover:bg-rose-600 transition-colors">
+                                <i class="fa-solid fa-xmark px-1.5 py-0.5"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="flex gap-2 pt-1">
+                            <button onclick="batalEdit()" id="btn-batal" class="hidden w-1/3 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl py-3 font-bold text-xs transition-all">Batal</button>
+                            <button onclick="simpanTransaksi()" id="btn-simpan" class="w-full flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-3 font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-[0.98]">
+                                Simpan Transaksi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sync to Google Sheets -->
+                <div class="text-center fade-in space-y-1.5">
+                    <button onclick="syncToSheets(false)" class="w-full py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50 rounded-xl hover:bg-emerald-100 transition-colors">
+                        <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Sinkronisasi ke Google Sheets
+                    </button>
+                    <div class="flex items-center justify-center gap-3 text-[11px]">
+                        <button type="button" onclick="syncToSheets(true)" class="font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 underline">
+                            Kirim Ulang Semua Riwayat
+                        </button>
+                        <span class="text-slate-300 dark:text-slate-700">•</span>
+                        <button type="button" onclick="aturUrlSheets()" class="font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 underline">
+                            Atur URL Sheets
+                        </button>
+                    </div>
+                    <p id="sync-status" class="text-xs mt-1.5 font-semibold hidden">Menyinkronkan...</p>
+                </div>
+            </div>
+
+            <!-- KOLOM KANAN (ANALITIK, KALENDER, DETAIL ARSIP BULAN) -->
+            <div class="lg:col-span-7 space-y-5">
+                
+                <!-- KARTU ANALITIK PENGELUARAN -->
+                <div class="glass-card p-5 fade-in space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-emerald-500"></i> Analitik Pengeluaran Bulan Ini
+                        </h3>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500" id="analytics-month-tag">Bulan Ini</span>
+                    </div>
+
+                    <!-- Progress Bar Multi-Segmen -->
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between text-xs font-bold">
+                            <span class="text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-circle text-[8px] mr-1"></i> Produktif (<span id="pct-produktif">0%</span>)</span>
+                            <span class="text-fuchsia-600 dark:text-fuchsia-400">Self-Reward (<span id="pct-selfreward">0%</span>) <i class="fa-solid fa-circle text-[8px] ml-1"></i></span>
+                        </div>
+                        <div class="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
+                            <div id="bar-produktif" class="bg-emerald-500 h-full transition-all duration-500" style="width: 50%"></div>
+                            <div id="bar-selfreward" class="bg-fuchsia-500 h-full transition-all duration-500" style="width: 50%"></div>
+                            <div id="bar-bebanproduksi" class="bg-sky-500 h-full transition-all duration-500" style="width: 0%"></div>
+                            <div id="bar-belialat" class="bg-amber-500 h-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                        <div id="label-rasio-mulae" class="hidden flex justify-between text-[11px] font-bold pt-0.5">
+                            <span class="text-sky-600 dark:text-sky-400"><i class="fa-solid fa-circle text-[8px] mr-1"></i> Beban Produksi (<span id="pct-bebanproduksi">0%</span>)</span>
+                            <span class="text-amber-600 dark:text-amber-400">Beli Alat (<span id="pct-belialat">0%</span>) <i class="fa-solid fa-circle text-[8px] ml-1"></i></span>
+                        </div>
+                    </div>
+
+                    <!-- Detail Card Nominal Split -->
+                    <div class="grid grid-cols-2 gap-3 pt-1">
+                        <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 p-3 rounded-xl">
+                            <p class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase">💡 Produktif</p>
+                            <p class="text-sm font-extrabold text-emerald-900 dark:text-emerald-200 mt-0.5" id="val-produktif">Rp0</p>
+                        </div>
+                        <div class="bg-fuchsia-50 dark:bg-fuchsia-950/30 border border-fuchsia-100 dark:border-fuchsia-900/50 p-3 rounded-xl">
+                            <p class="text-[10px] font-bold text-fuchsia-700 dark:text-fuchsia-400 uppercase">🎉 Self-Reward</p>
+                            <p class="text-sm font-extrabold text-fuchsia-900 dark:text-fuchsia-200 mt-0.5" id="val-selfreward">Rp0</p>
+                        </div>
+                    </div>
+
+                    <!-- Kartu Tambahan Khusus Mulae.Production -->
+                    <div id="analytics-mulae-extra" class="hidden grid grid-cols-2 gap-3">
+                        <div class="bg-sky-50 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/50 p-3 rounded-xl">
+                            <p class="text-[10px] font-bold text-sky-700 dark:text-sky-400 uppercase">🎬 Beban Produksi</p>
+                            <p class="text-sm font-extrabold text-sky-900 dark:text-sky-200 mt-0.5" id="val-bebanproduksi">Rp0</p>
+                        </div>
+                        <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/50 p-3 rounded-xl">
+                            <p class="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase">📷 Beli Alat</p>
+                            <p class="text-sm font-extrabold text-amber-900 dark:text-amber-200 mt-0.5" id="val-belialat">Rp0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KALENDER & RIWAYAT PER BULAN -->
+                <div class="glass-card p-5 fade-in space-y-4">
+                    <div class="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
+                        <button onclick="gantiBulanKalender(-1)" class="p-1.5 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <div class="text-center">
+                            <h3 class="font-extrabold text-sm text-slate-800 dark:text-slate-100 uppercase tracking-wide" id="cal-month-title">Bulan Ini</h3>
+                            <p class="text-[10px] text-slate-400 font-semibold" id="cal-month-sub">Pilih Tanggal</p>
+                        </div>
+                        <button onclick="gantiBulanKalender(1)" class="p-1.5 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 font-bold text-xs">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-extrabold text-slate-400 uppercase">
+                        <div>Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div>
+                    </div>
+
+                    <div id="calendar-tiles" class="calendar-grid"></div>
+
+                    <div class="bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800 text-xs space-y-1.5">
+                        <div class="flex justify-between font-semibold">
+                            <span class="text-slate-500">Pemasukan Bulan Ini:</span>
+                            <span class="text-emerald-600 dark:text-emerald-400 font-bold" id="cal-rekap-masuk">Rp0</span>
+                        </div>
+                        <div class="flex justify-between font-semibold">
+                            <span class="text-slate-500">Pengeluaran Bulan Ini:</span>
+                            <span class="text-rose-600 dark:text-rose-400 font-bold" id="cal-rekap-keluar">Rp0</span>
+                        </div>
+                        <div class="flex justify-between font-bold border-t border-slate-200 dark:border-slate-800 pt-1.5 mt-1">
+                            <span class="text-slate-700 dark:text-slate-200">Sisa / Laba Bulan Ini:</span>
+                            <span id="cal-rekap-laba" class="text-emerald-600 dark:text-emerald-400">Rp0</span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-1">
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-200" id="selected-date-label">Semua Hari di Bulan Ini</span>
+                        <button onclick="resetFilterTanggal()" id="btn-reset-filter" class="hidden text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline">Tampilkan Semua</button>
+                    </div>
+
+                    <div id="history-list-detail" class="space-y-2.5 pt-1"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT FIREBASE & LOGIKA APLIKASI -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCE9jIpz-iM2gy6N-0CrtXcca7SeA-2ZRg",
+            authDomain: "keuangan-fea39.firebaseapp.com",
+            projectId: "keuangan-fea39",
+            storageBucket: "keuangan-fea39.firebasestorage.app",
+            messagingSenderId: "35986050008",
+            appId: "1:35986050008:web:4d2d33c9af9772044100ad"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = initializeFirestore(app, {
+            localCache: persistentLocalCache({
+                tabManager: persistentMultipleTabManager()
+            })
+        });
+        const googleProvider = new GoogleAuthProvider();
+        
+        const GOOGLE_APP_SCRIPT_URL = "URL_APPS_SCRIPT_ANDA_DISINI";
+
+        let currentTab = 'Pribadi';
+        let jenisTx = 'Pengeluaran';
+        let sifatTx = 'Produktif';
+        let dataTransaksi = [];
+        let base64FotoAktif = null;
+        let editDocId = null;
+        let currentLocationStr = null;
+        let isManagingChips = false;
+        let isPrivacyMode = localStorage.getItem('mulaePrivacy') === 'true';
+
+        // State Kalkulator Nominal Utama & Cicilan
+        let mainLastFormula = null;
+        let mainLastResult = null;
+        let cicilLastFormula = null;
+        let cicilLastResult = null;
+        let activeCicilDocId = null;
+
+        let activeCalDate = new Date();
+        let selectedDayFilter = null;
+        let currentUser = null;
+
+        let categories = JSON.parse(localStorage.getItem('mulaeCatsV2')) || {
+            Pribadi: {
+                Pengeluaran: ['Makan', 'Bensin', 'Nongkrong', 'Tagihan', 'Belanja'],
+                Pemasukan: ['Gaji', 'Transfer', 'Bonus', 'Cashback']
+            },
+            Bisnis: {
+                Pengeluaran: ['Sewa Alat', 'Transport Job', 'Honor Crew', 'Makan Crew', 'Bensin Operational'],
+                Pemasukan: ['DP Klien', 'Pelunasan', 'Jasa Edit', 'Sewa Equipment']
+            }
+        };
+
+        function applyTheme(theme) {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (theme === 'dark') {
+                html.classList.remove('light');
+                html.classList.add('dark');
+                if (icon) icon.className = "fa-solid fa-sun text-base text-amber-400";
+            } else {
+                html.classList.remove('dark');
+                html.classList.add('light');
+                if (icon) icon.className = "fa-solid fa-moon text-base";
+            }
+            localStorage.setItem('mulaeTheme', theme);
+        }
+
+        window.toggleTheme = function() {
+            const isDark = document.documentElement.classList.contains('dark');
+            applyTheme(isDark ? 'light' : 'dark');
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('auth-overlay').classList.add('hidden');
+                
+                const savedPin = localStorage.getItem('mulaePin');
+                const isTrusted = localStorage.getItem('mulaeTrustDevice') === 'true';
+                
+                if (savedPin && !isTrusted) {
+                    document.getElementById('pin-overlay').classList.remove('hidden');
+                } else {
+                    document.getElementById('pin-overlay').classList.add('hidden');
+                }
+
+                initFirestoreListener();
+            } else {
+                currentUser = null;
+                document.getElementById('auth-overlay').classList.remove('hidden');
+            }
+        });
+
+        function initFirestoreListener() {
+            if(!currentUser) return;
+            const q = query(collection(db, "transactions"), orderBy("id", "desc"));
+            onSnapshot(q, (snapshot) => {
+                dataTransaksi = [];
+                snapshot.forEach((doc) => {
+                    dataTransaksi.push({ ...doc.data(), docId: doc.id });
+                });
+                kalkulasiDanRender();
+            });
+        }
+
+        window.handleGoogleLogin = async function() {
+            const errEl = document.getElementById('auth-error');
+            errEl.classList.add('hidden');
+            try {
+                await signInWithPopup(auth, googleProvider);
+            } catch (err) {
+                errEl.innerText = "Login Google Gagal: " + err.message;
+                errEl.classList.remove('hidden');
+            }
+        }
+
+        window.handleLogin = async function() {
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
+            const errEl = document.getElementById('auth-error');
+            errEl.classList.add('hidden');
+
+            if (!email || !password) {
+                errEl.innerText = "Email dan Password wajib diisi!";
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (err) {
+                errEl.innerText = "Login Gagal: " + err.message;
+                errEl.classList.remove('hidden');
+            }
+        }
+
+        window.handleRegister = async function() {
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
+            const errEl = document.getElementById('auth-error');
+            errEl.classList.add('hidden');
+
+            if (!email || !password) {
+                errEl.innerText = "Mohon isi Email dan Password terlebih dahulu!";
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                alert("Pendaftaran berhasil! Akun Anda sudah terdaftar dan siap digunakan.");
+            } catch (err) {
+                errEl.innerText = "Daftar Gagal: " + err.message;
+                errEl.classList.remove('hidden');
+            }
+        }
+
+        window.handleLogout = function() {
+            if(confirm("Keluar dari akun?")) {
+                signOut(auth);
+            }
+        }
+
+        window.verifyPin = function() {
+            const inputPin = document.getElementById('pin-input').value;
+            const savedPin = localStorage.getItem('mulaePin');
+            const trustCheck = document.getElementById('trust-device-check').checked;
+
+            if (inputPin === savedPin) {
+                document.getElementById('pin-overlay').classList.add('hidden');
+                document.getElementById('pin-error').classList.add('hidden');
+                if (trustCheck) {
+                    localStorage.setItem('mulaeTrustDevice', 'true');
+                }
+            } else {
+                document.getElementById('pin-error').classList.remove('hidden');
+            }
+        }
+
+        window.setupPinModal = function() {
+            const pinBicara = prompt("Masukkan 4-6 digit PIN keamanan baru (Kosongkan untuk menghapus PIN):");
+            if (pinBicara !== null) {
+                if (pinBicara.trim() === "") {
+                    localStorage.removeItem('mulaePin');
+                    localStorage.removeItem('mulaeTrustDevice');
+                    alert("PIN Keamanan telah dihapus.");
+                } else {
+                    localStorage.setItem('mulaePin', pinBicara.trim());
+                    localStorage.removeItem('mulaeTrustDevice');
+                    alert("PIN berhasil diatur!");
+                }
+            }
+        }
+
+        window.togglePrivacyMode = function() {
+            isPrivacyMode = !isPrivacyMode;
+            localStorage.setItem('mulaePrivacy', isPrivacyMode);
+            const icon = document.getElementById('privacy-icon');
+            if(isPrivacyMode) {
+                icon.className = "fa-solid fa-eye-slash text-sm text-emerald-600";
+            } else {
+                icon.className = "fa-solid fa-eye text-sm";
+            }
+            kalkulasiDanRender();
+        }
+
+        function formatRupiah(angka) {
+            if(isPrivacyMode) return "Rp ••••••••";
+            return new Intl.NumberFormat('id-ID').format(angka);
+        }
+
+        function formatAngkaPlain(angka) {
+            return new Intl.NumberFormat('id-ID').format(Math.round(angka));
+        }
+
+        // ==========================================
+        // PARSER KALKULATOR AMAN (TANPA EVAL)
+        // ==========================================
+        function parseKalkulatorNominal(rawStr) {
+            if (rawStr === null || rawStr === undefined) return { valid: false, value: 0, hasFormula: false, formattedFormula: null };
+            const trimmed = String(rawStr).trim();
+            if (!trimmed) return { valid: false, value: 0, hasFormula: false, formattedFormula: null };
+
+            // Normalisasi simbol operator ke +, -, *, /
+            let normalized = trimmed
+                .replace(/[×xX]/g, '*')
+                .replace(/[÷:]/g, '/')
+                .replace(/[−–—]/g, '-');
+
+            // Cek apakah mengandung operator matematika di tengah ekspresi
+            const hasFormula = /[\d)]\s*[+\-*/]\s*[\d(]/.test(normalized);
+
+            // Hapus titik pemisah ribuan (6.000 -> 6000), lalu ubah koma desimal jadi titik
+            const mathReady = normalized
+                .replace(/\./g, '')
+                .replace(/,/g, '.')
+                .replace(/\s+/g, '');
+
+            // Hanya izinkan digit, titik desimal, operator +-*/, dan tanda kurung
+            if (!/^[0-9+\-*/().]+$/.test(mathReady)) {
+                return { valid: false, value: 0, hasFormula, formattedFormula: null };
+            }
+
+            // Tokenisasi ekspresi
+            const tokens = mathReady.match(/(\d+(?:\.\d+)?|[+\-*/()])/g);
+            if (!tokens || tokens.length === 0) {
+                return { valid: false, value: 0, hasFormula, formattedFormula: null };
+            }
+
+            let pos = 0;
+            function parseExpression() {
+                let left = parseTerm();
+                if (left === null) return null;
+                while (pos < tokens.length && (tokens[pos] === '+' || tokens[pos] === '-')) {
+                    const op = tokens[pos++];
+                    const right = parseTerm();
+                    if (right === null) return null;
+                    left = op === '+' ? left + right : left - right;
+                }
+                return left;
+            }
+
+            function parseTerm() {
+                let left = parseFactor();
+                if (left === null) return null;
+                while (pos < tokens.length && (tokens[pos] === '*' || tokens[pos] === '/')) {
+                    const op = tokens[pos++];
+                    const right = parseFactor();
+                    if (right === null) return null;
+                    if (op === '/' && right === 0) return null;
+                    left = op === '*' ? left * right : left / right;
+                }
+                return left;
+            }
+
+            function parseFactor() {
+                if (pos >= tokens.length) return null;
+                const tok = tokens[pos];
+                if (tok === '+') {
+                    pos++;
+                    return parseFactor();
+                }
+                if (tok === '-') {
+                    pos++;
+                    const val = parseFactor();
+                    return val === null ? null : -val;
+                }
+                if (tok === '(') {
+                    pos++;
+                    const val = parseExpression();
+                    if (val === null || tokens[pos] !== ')') return null;
+                    pos++;
+                    return val;
+                }
+                if (/^\d+(?:\.\d+)?$/.test(tok)) {
+                    pos++;
+                    return parseFloat(tok);
+                }
+                return null;
+            }
+
+            const result = parseExpression();
+            if (result === null || pos !== tokens.length || !isFinite(result)) {
+                return { valid: false, value: 0, hasFormula, formattedFormula: null };
+            }
+
+            const rounded = Math.round(result);
+
+            // Rapikan tampilan rumus untuk deskripsi riwayat (misal 6000+6000 -> 6.000 + 6.000)
+            let formattedFormula = null;
+            if (hasFormula) {
+                formattedFormula = normalized
+                    .replace(/\./g, '')
+                    .replace(/\d+/g, (numStr) => formatAngkaPlain(parseInt(numStr, 10)))
+                    .replace(/\s*([+\-*/])\s*/g, (_, op) => {
+                        const displayOp = op === '*' ? '×' : (op === '/' ? '÷' : op);
+                        return ` ${displayOp} `;
+                    })
+                    .trim();
+            }
+
+            return {
+                valid: rounded > 0,
+                value: rounded,
+                hasFormula,
+                formattedFormula
+            };
+        }
+
+        function formatLiveInputSementara(rawStr) {
+            // Memformat tiap segmen angka dengan pemisah ribuan saat mengetik tanpa merusak operator di ujung
+            return rawStr.replace(/\d[\d.]*/g, (match) => {
+                const digits = match.replace(/\./g, '');
+                if (!digits) return match;
+                return formatAngkaPlain(parseInt(digits, 10));
+            });
+        }
+
+        window.onMainNominalInput = function() {
+            const input = document.getElementById('input-nominal');
+            const preview = document.getElementById('main-calc-preview');
+            const badge = document.getElementById('main-formula-badge');
+            const badgeText = document.getElementById('main-formula-text');
+
+            const cursorPos = input.selectionStart;
+            const prevLen = input.value.length;
+            const formattedVal = formatLiveInputSementara(input.value);
+            if (formattedVal !== input.value) {
+                input.value = formattedVal;
+                const diff = formattedVal.length - prevLen;
+                if (cursorPos !== null) {
+                    input.setSelectionRange(Math.max(0, cursorPos + diff), Math.max(0, cursorPos + diff));
+                }
+            }
+
+            const parsed = parseKalkulatorNominal(input.value);
+            if (parsed.hasFormula) {
+                if (parsed.valid) {
+                    preview.innerText = isPrivacyMode ? "= Rp ••••••" : `= Rp${formatAngkaPlain(parsed.value)}`;
+                    preview.classList.remove('hidden');
+                    mainLastFormula = parsed.formattedFormula;
+                    mainLastResult = parsed.value;
+                    badgeText.innerText = `${parsed.formattedFormula} = Rp${formatAngkaPlain(parsed.value)}`;
+                    badge.classList.remove('hidden');
+                } else {
+                    preview.classList.add('hidden');
+                }
+            } else {
+                preview.classList.add('hidden');
+                // Jika user mengubah angka secara manual sehingga tidak lagi sama dengan hasil hitungan terakhir, hapus rincian
+                if (parsed.value !== mainLastResult) {
+                    mainLastFormula = null;
+                    mainLastResult = null;
+                    badge.classList.add('hidden');
+                }
+            }
+        }
+
+        window.selesaikanHitungMain = function() {
+            const input = document.getElementById('input-nominal');
+            const preview = document.getElementById('main-calc-preview');
+            const badge = document.getElementById('main-formula-badge');
+            const badgeText = document.getElementById('main-formula-text');
+
+            const parsed = parseKalkulatorNominal(input.value);
+            if (parsed.valid) {
+                if (parsed.hasFormula && parsed.formattedFormula) {
+                    mainLastFormula = parsed.formattedFormula;
+                    mainLastResult = parsed.value;
+                    badgeText.innerText = `${parsed.formattedFormula} = Rp${formatAngkaPlain(parsed.value)}`;
+                    badge.classList.remove('hidden');
+                }
+                input.value = formatAngkaPlain(parsed.value);
+                preview.classList.add('hidden');
+            }
+        }
+
+        window.onCicilNominalInput = function() {
+            const input = document.getElementById('cicil-nominal');
+            const preview = document.getElementById('cicil-calc-preview');
+
+            const cursorPos = input.selectionStart;
+            const prevLen = input.value.length;
+            const formattedVal = formatLiveInputSementara(input.value);
+            if (formattedVal !== input.value) {
+                input.value = formattedVal;
+                const diff = formattedVal.length - prevLen;
+                if (cursorPos !== null) {
+                    input.setSelectionRange(Math.max(0, cursorPos + diff), Math.max(0, cursorPos + diff));
+                }
+            }
+
+            const parsed = parseKalkulatorNominal(input.value);
+            if (parsed.hasFormula && parsed.valid) {
+                preview.innerText = isPrivacyMode ? "= Rp ••••••" : `= Rp${formatAngkaPlain(parsed.value)}`;
+                preview.classList.remove('hidden');
+                cicilLastFormula = parsed.formattedFormula;
+                cicilLastResult = parsed.value;
+            } else {
+                preview.classList.add('hidden');
+                if (parsed.value !== cicilLastResult) {
+                    cicilLastFormula = null;
+                    cicilLastResult = null;
+                }
+            }
+        }
+
+        window.selesaikanHitungCicil = function() {
+            const input = document.getElementById('cicil-nominal');
+            const preview = document.getElementById('cicil-calc-preview');
+            const parsed = parseKalkulatorNominal(input.value);
+            if (parsed.valid) {
+                if (parsed.hasFormula && parsed.formattedFormula) {
+                    cicilLastFormula = parsed.formattedFormula;
+                    cicilLastResult = parsed.value;
+                }
+                input.value = formatAngkaPlain(parsed.value);
+                preview.classList.add('hidden');
+            }
+        }
+
+        window.sisipOperator = function(target, op) {
+            const inputId = target === 'cicil' ? 'cicil-nominal' : 'input-nominal';
+            const input = document.getElementById(inputId);
+            input.focus();
+            const val = input.value.trim();
+            if (!val) return;
+            // Ganti operator di ujung jika sudah ada operator
+            input.value = val.replace(/\s*[+\-*/×÷]\s*$/, '') + op;
+            if (target === 'cicil') onCicilNominalInput();
+            else onMainNominalInput();
+        }
+
+        window.handleCalcKeydown = function(event, target) {
+            if (event.key === 'Enter' || event.key === '=') {
+                const input = event.target;
+                if (/[+\-*/×÷]/.test(input.value)) {
+                    event.preventDefault();
+                    if (target === 'cicil') selesaikanHitungCicil();
+                    else selesaikanHitungMain();
+                }
+            }
+        }
+
+        function getEventTimestamp(t) {
+            if (t.txTimestamp && !isNaN(Number(t.txTimestamp))) {
+                return Number(t.txTimestamp);
+            }
+            if (t.isoWaktu) {
+                const parsed = new Date(t.isoWaktu).getTime();
+                if (!isNaN(parsed)) return parsed;
+            }
+            if (t.thnAngka !== undefined && t.blnAngka !== undefined && t.tglAngka !== undefined) {
+                const timeParts = String(t.waktu || "00:00").replace(".", ":").split(":");
+                const hh = parseInt(timeParts[0], 10) || 0;
+                const mm = parseInt(timeParts[1], 10) || 0;
+                return new Date(t.thnAngka, t.blnAngka, t.tglAngka, hh, mm).getTime();
+            }
+            return Number(t.id) || 0;
+        }
+
+        function getLocalDateTimeString(dateObj = new Date()) {
+            const tzOffset = dateObj.getTimezoneOffset() * 60000;
+            return (new Date(dateObj - tzOffset)).toISOString().slice(0, 16);
+        }
+
+        window.setWaktuSekarang = function() {
+            document.getElementById('input-waktu').value = getLocalDateTimeString(new Date());
+        }
+
+        window.switchTab = function(tab) {
+            currentTab = tab;
+            const isMulae = tab === 'Bisnis';
+
+            document.getElementById('btn-pribadi').className = tab === 'Pribadi' ? "flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-active" : "flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-inactive";
+            document.getElementById('btn-bisnis').className = isMulae ? "flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-active" : "flex-1 py-2 text-sm font-semibold rounded-lg transition-all tab-inactive";
+
+            // Tampilkan opsi Beban Produksi & Beli Alat khusus di tab Mulae.Production
+            document.getElementById('panel-sifat-mulae').classList.toggle('hidden', !isMulae);
+            document.getElementById('analytics-mulae-extra').classList.toggle('hidden', !isMulae);
+            document.getElementById('label-rasio-mulae').classList.toggle('hidden', !isMulae);
+
+            // Jika kembali ke tab Pribadi saat pilihan masih Beban Produksi / Beli Alat, kembalikan ke Produktif
+            if (!isMulae && (sifatTx === 'Beban Produksi' || sifatTx === 'Beli Alat')) {
+                setSifat('Produktif');
+            }
+
+            renderChips();
+            kalkulasiDanRender();
+        }
+
+        window.setSifat = function(sifat) {
+            sifatTx = sifat;
+            const inactiveClass = "flex-1 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 transition-all";
+            const inactiveGridClass = "w-full py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 transition-all";
+
+            const btnProd = document.getElementById('btn-produktif');
+            const btnSelf = document.getElementById('btn-selfreward');
+            const btnProdBeban = document.getElementById('btn-bebanproduksi');
+            const btnAlat = document.getElementById('btn-belialat');
+
+            btnProd.className = inactiveClass + " hover:text-emerald-600";
+            btnSelf.className = inactiveClass + " hover:text-fuchsia-600";
+            btnProdBeban.className = inactiveGridClass + " hover:text-sky-600";
+            btnAlat.className = inactiveGridClass + " hover:text-amber-600";
+
+            if (sifat === 'Produktif') {
+                btnProd.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg border-2 border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 transition-all";
+            } else if (sifat === 'Self-Reward') {
+                btnSelf.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg border-2 border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 dark:border-fuchsia-800 dark:bg-fuchsia-950/40 dark:text-fuchsia-300 transition-all";
+            } else if (sifat === 'Beban Produksi') {
+                btnProdBeban.className = "w-full py-1.5 text-xs font-semibold rounded-lg border-2 border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300 transition-all";
+            } else if (sifat === 'Beli Alat') {
+                btnAlat.className = "w-full py-1.5 text-xs font-semibold rounded-lg border-2 border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300 transition-all";
+            }
+        }
+
+        window.setJenis = function(jenis) {
+            jenisTx = jenis;
+            document.getElementById('btn-keluar').className = jenis === 'Pengeluaran' ? "flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-active text-rose-600 dark:text-rose-400" : "flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-inactive";
+            document.getElementById('btn-masuk').className = jenis === 'Pemasukan' ? "flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-active text-emerald-600 dark:text-emerald-400" : "flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-inactive";
+            document.getElementById('btn-hutang').className = jenis === 'Hutang' ? "flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-active text-amber-600 dark:text-amber-400" : "flex-1 py-2 text-xs font-bold rounded-lg transition-all tab-inactive";
+            
+            // Tampilkan sifat (Produktif, Self-Reward, Beban Produksi, Beli Alat) pada Pengeluaran DAN Catat Hutang
+            document.getElementById('panel-sifat').style.display = (jenis === 'Pengeluaran' || jenis === 'Hutang') ? 'block' : 'none';
+            document.getElementById('label-jenis-chip').innerText = jenis === 'Hutang' ? 'Pengeluaran' : jenis;
+            
+            renderChips();
+        }
+
+        function renderChips() {
+            const container = document.getElementById('chips-container');
+            const targetJenis = (jenisTx === 'Hutang') ? 'Pengeluaran' : jenisTx;
+            const currentList = categories[currentTab][targetJenis] || [];
+
+            let html = currentList.map((cat, idx) => {
+                if(isManagingChips) {
+                    return `<div class="flex items-center gap-1 bg-slate-200 dark:bg-slate-700 px-2.5 py-1 rounded-full text-xs font-semibold">
+                        <span>${cat}</span>
+                        <button onclick="editSingleChip(${idx})" class="text-emerald-600 dark:text-emerald-300 ml-1"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                        <button onclick="hapusSingleChip(${idx})" class="text-rose-500"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                    </div>`;
+                } else {
+                    return `<button onclick="document.getElementById('input-keterangan').value = '${cat}'" class="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 hover:text-emerald-600 transition-colors border border-slate-200/60 dark:border-slate-700">${cat}</button>`;
+                }
+            }).join('');
+
+            html += `<button onclick="tambahKategori()" class="px-3 py-1.5 rounded-full border border-dashed border-emerald-500 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"><i class="fa-solid fa-plus mr-1"></i> Tambah</button>`;
+            container.innerHTML = html;
+        }
+
+        window.toggleManageChips = function() { isManagingChips = !isManagingChips; renderChips(); }
+
+        window.tambahKategori = function() {
+            const baru = prompt("Masukkan nama pilihan cepat baru:");
+            if(baru && baru.trim() !== "") {
+                const targetJenis = (jenisTx === 'Hutang') ? 'Pengeluaran' : jenisTx;
+                categories[currentTab][targetJenis].push(baru.trim());
+                localStorage.setItem('mulaeCatsV2', JSON.stringify(categories));
+                renderChips();
+            }
+        }
+
+        window.editSingleChip = function(idx) {
+            const targetJenis = (jenisTx === 'Hutang') ? 'Pengeluaran' : jenisTx;
+            const namaLama = categories[currentTab][targetJenis][idx];
+            const baru = prompt("Edit nama pilihan cepat:", namaLama);
+            if(baru && baru.trim() !== "") {
+                categories[currentTab][targetJenis][idx] = baru.trim();
+                localStorage.setItem('mulaeCatsV2', JSON.stringify(categories));
+                renderChips();
+            }
+        }
+
+        window.hapusSingleChip = function(idx) {
+            const targetJenis = (jenisTx === 'Hutang') ? 'Pengeluaran' : jenisTx;
+            if(confirm("Hapus pilihan cepat ini?")) {
+                categories[currentTab][targetJenis].splice(idx, 1);
+                localStorage.setItem('mulaeCatsV2', JSON.stringify(categories));
+                renderChips();
+            }
+        }
+
+        window.mintaLokasi = function() {
+            if(navigator.geolocation) {
+                document.getElementById('lokasi-status').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mencari...';
+                navigator.geolocation.getCurrentPosition(pos => {
+                    currentLocationStr = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
+                    document.getElementById('lokasi-status').innerHTML = '<i class="fa-solid fa-location-dot text-emerald-500"></i> Lokasi Tersimpan';
+                }, () => {
+                    document.getElementById('lokasi-status').innerHTML = '<i class="fa-solid fa-circle-exclamation text-rose-500"></i> Ditolak';
+                });
+            }
+        }
+
+        window.previewAndCompressFoto = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = function() {
+                    const MAX_WIDTH = 800; const MAX_HEIGHT = 800;
+                    let width = img.width; let height = img.height;
+                    if (width > height && width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } 
+                    else if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    base64FotoAktif = canvas.toDataURL('image/jpeg', 0.7);
+                    document.getElementById('foto-preview').src = base64FotoAktif;
+                    document.getElementById('foto-preview-container').classList.remove('hidden');
+                }
+            }
+            reader.readAsDataURL(file);
+        }
+
+        window.hapusFoto = function() {
+            base64FotoAktif = null;
+            const gEl = document.getElementById('input-foto-galeri');
+            const kEl = document.getElementById('input-foto-kamera');
+            if (gEl) gEl.value = '';
+            if (kEl) kEl.value = '';
+            document.getElementById('foto-preview-container').classList.add('hidden');
+        }
+
+        window.simpanTransaksi = async function() {
+            const rawNominal = document.getElementById('input-nominal').value;
+            const parsedNominal = parseKalkulatorNominal(rawNominal);
+            const nominal = parsedNominal.valid ? parsedNominal.value : 0;
+            const rincianNominal = parsedNominal.hasFormula
+                ? parsedNominal.formattedFormula
+                : (mainLastResult === nominal ? mainLastFormula : null);
+
+            const keterangan = document.getElementById('input-keterangan').value;
+            const inputWaktu = document.getElementById('input-waktu').value;
+            
+            if(!nominal || !keterangan) return alert('Mohon isi nominal dan keterangan.');
+
+            document.getElementById('btn-simpan').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+            document.getElementById('btn-simpan').disabled = true;
+
+            const dateObj = inputWaktu ? new Date(inputWaktu) : new Date();
+            const txTimestamp = dateObj.getTime();
+            const bulanStr = dateObj.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+            const tanggalStr = dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            const waktuStr = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+            const flagSifat = (jenisTx === 'Pengeluaran' || jenisTx === 'Hutang') ? sifatTx : null;
+
+            const txData = {
+                tanggal: tanggalStr, 
+                waktu: waktuStr, 
+                bulan: bulanStr,
+                isoWaktu: inputWaktu,
+                txTimestamp: txTimestamp,
+                tglAngka: dateObj.getDate(),
+                blnAngka: dateObj.getMonth(),
+                thnAngka: dateObj.getFullYear(),
+                entitas: currentTab, 
+                jenis: jenisTx, 
+                sifat: flagSifat,
+                nominal: nominal,
+                rincianNominal: rincianNominal || null,
+                keterangan: keterangan,
+                foto: base64FotoAktif, 
+                lokasi: currentLocationStr, 
+                syncStatus: false,
+                uid: currentUser ? currentUser.uid : 'public'
+            };
+
+            try {
+                if (editDocId) {
+                    const existingTx = dataTransaksi.find(t => t.docId === editDocId);
+                    if (jenisTx === 'Hutang' && existingTx) {
+                        const cicilanLama = Array.isArray(existingTx.riwayatCicilan) ? existingTx.riwayatCicilan : [];
+                        const totalTerbayar = cicilanLama.reduce((sum, c) => sum + (Number(c.nominal) || 0), 0);
+                        txData.nominalAwal = totalTerbayar > 0 ? (nominal + totalTerbayar) : nominal;
+                        txData.riwayatCicilan = cicilanLama;
+                        txData.isLunas = nominal <= 0;
+                    }
+                    await updateDoc(doc(db, "transactions", editDocId), txData);
+                } else {
+                    txData.id = Date.now();
+                    txData.isLunas = false;
+                    if (jenisTx === 'Hutang') {
+                        txData.nominalAwal = nominal;
+                        txData.riwayatCicilan = [];
+                    }
+                    await addDoc(collection(db, "transactions"), txData);
+                }
+                batalEdit();
+            } catch (e) {
+                alert("Gagal menyimpan data.");
+            }
+            
+            document.getElementById('btn-simpan').innerHTML = 'Simpan Transaksi';
+            document.getElementById('btn-simpan').disabled = false;
+        }
+
+        window.editTx = function(docId) {
+            const tx = dataTransaksi.find(t => t.docId === docId);
+            if(tx) {
+                if (tx.rincianNominal) {
+                    document.getElementById('input-nominal').value = tx.rincianNominal;
+                    mainLastFormula = tx.rincianNominal;
+                    mainLastResult = Number(tx.nominalAwal || tx.nominal) || 0;
+                    onMainNominalInput();
+                } else {
+                    document.getElementById('input-nominal').value = formatAngkaPlain(tx.nominal);
+                    mainLastFormula = null;
+                    mainLastResult = null;
+                    document.getElementById('main-calc-preview').classList.add('hidden');
+                    document.getElementById('main-formula-badge').classList.add('hidden');
+                }
+                document.getElementById('input-keterangan').value = tx.keterangan;
+                setJenis(tx.jenis);
+                if(tx.sifat) setSifat(tx.sifat);
+                editDocId = docId;
+                document.getElementById('btn-batal').classList.remove('hidden');
+                document.getElementById('btn-simpan').innerText = "Perbarui Transaksi";
+                if(tx.isoWaktu) document.getElementById('input-waktu').value = tx.isoWaktu;
+                if(tx.foto) {
+                    base64FotoAktif = tx.foto;
+                    document.getElementById('foto-preview').src = base64FotoAktif;
+                    document.getElementById('foto-preview-container').classList.remove('hidden');
+                }
+                document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        window.batalEdit = function() {
+            editDocId = null;
+            mainLastFormula = null;
+            mainLastResult = null;
+            document.getElementById('input-nominal').value = '';
+            document.getElementById('main-calc-preview').classList.add('hidden');
+            document.getElementById('main-formula-badge').classList.add('hidden');
+            document.getElementById('input-keterangan').value = '';
+            document.getElementById('btn-batal').classList.add('hidden');
+            document.getElementById('btn-simpan').innerText = "Simpan Transaksi";
+            hapusFoto();
+            setSifat('Produktif');
+            setJenis('Pengeluaran');
+            setWaktuSekarang();
+        }
+
+        window.hapusTx = async function(docId) {
+            if(confirm("Hapus data transaksi ini?")) {
+                try { await deleteDoc(doc(db, "transactions", docId)); } catch (e) { alert("Gagal menghapus."); }
+            }
+        }
+
+        // ==========================================
+        // FITUR CICIL HUTANG & PELUNASAN
+        // ==========================================
+        window.bukaModalCicil = function(docId) {
+            const tx = dataTransaksi.find(t => t.docId === docId);
+            if (!tx) return;
+
+            activeCicilDocId = docId;
+            cicilLastFormula = null;
+            cicilLastResult = null;
+
+            const riwayatCicilan = Array.isArray(tx.riwayatCicilan) ? tx.riwayatCicilan : [];
+            const totalTerbayar = riwayatCicilan.reduce((sum, c) => sum + (Number(c.nominal) || 0), 0);
+            const sisaHutang = Number(tx.nominal) || 0;
+            const nominalAwal = Number(tx.nominalAwal !== undefined ? tx.nominalAwal : (sisaHutang + totalTerbayar)) || sisaHutang;
+
+            document.getElementById('cicil-judul-hutang').innerText = tx.keterangan;
+            document.getElementById('cicil-info-awal').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(nominalAwal);
+            document.getElementById('cicil-info-terbayar').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(totalTerbayar);
+            document.getElementById('cicil-info-sisa').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(sisaHutang);
+
+            document.getElementById('cicil-waktu').value = getLocalDateTimeString(new Date());
+            document.getElementById('cicil-nominal').value = '';
+            document.getElementById('cicil-calc-preview').classList.add('hidden');
+            document.getElementById('cicil-catatan').value = `Cicilan ke-${riwayatCicilan.length + 1}`;
+            document.getElementById('cicil-error').classList.add('hidden');
+
+            document.getElementById('cicil-overlay').classList.remove('hidden');
+        }
+
+        window.tutupModalCicil = function() {
+            activeCicilDocId = null;
+            document.getElementById('cicil-overlay').classList.add('hidden');
+        }
+
+        window.isiCicilSetengah = function() {
+            const tx = dataTransaksi.find(t => t.docId === activeCicilDocId);
+            if (!tx) return;
+            const setengah = Math.ceil((Number(tx.nominal) || 0) / 2);
+            cicilLastFormula = null;
+            cicilLastResult = null;
+            document.getElementById('cicil-nominal').value = formatAngkaPlain(setengah);
+            document.getElementById('cicil-calc-preview').classList.add('hidden');
+        }
+
+        window.isiCicilPenuh = function() {
+            const tx = dataTransaksi.find(t => t.docId === activeCicilDocId);
+            if (!tx) return;
+            const sisa = Number(tx.nominal) || 0;
+            cicilLastFormula = null;
+            cicilLastResult = null;
+            document.getElementById('cicil-nominal').value = formatAngkaPlain(sisa);
+            document.getElementById('cicil-calc-preview').classList.add('hidden');
+        }
+
+        window.simpanCicilan = async function() {
+            const tx = dataTransaksi.find(t => t.docId === activeCicilDocId);
+            const errEl = document.getElementById('cicil-error');
+            errEl.classList.add('hidden');
+
+            if (!tx) return;
+
+            const rawCicil = document.getElementById('cicil-nominal').value;
+            const parsedCicil = parseKalkulatorNominal(rawCicil);
+            const nominalCicil = parsedCicil.valid ? parsedCicil.value : 0;
+            const rincianCicil = parsedCicil.hasFormula
+                ? parsedCicil.formattedFormula
+                : (cicilLastResult === nominalCicil ? cicilLastFormula : null);
+
+            const sisaHutang = Number(tx.nominal) || 0;
+
+            if (!nominalCicil || nominalCicil <= 0) {
+                errEl.innerText = "Masukkan nominal cicilan yang valid!";
+                errEl.classList.remove('hidden');
+                return;
+            }
+            if (nominalCicil > sisaHutang) {
+                errEl.innerText = `Nominal cicilan melebihi sisa hutang (Rp${formatAngkaPlain(sisaHutang)})!`;
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            const btnSave = document.getElementById('btn-simpan-cicil');
+            btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+            btnSave.disabled = true;
+
+            try {
+                const waktuInput = document.getElementById('cicil-waktu').value;
+                const dateObj = waktuInput ? new Date(waktuInput) : new Date();
+                const tanggalStr = dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+                const waktuStr = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                const bulanStr = dateObj.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+                const isoWaktuStr = waktuInput || getLocalDateTimeString(dateObj);
+                const catatanStr = document.getElementById('cicil-catatan').value.trim();
+
+                const riwayatLama = Array.isArray(tx.riwayatCicilan) ? tx.riwayatCicilan : [];
+                const totalTerbayarSebelumnya = riwayatLama.reduce((sum, c) => sum + (Number(c.nominal) || 0), 0);
+                const nominalAwal = Number(tx.nominalAwal !== undefined ? tx.nominalAwal : (sisaHutang + totalTerbayarSebelumnya)) || sisaHutang;
+                const sisaBaru = Math.max(0, sisaHutang - nominalCicil);
+                const jadiLunas = sisaBaru === 0;
+
+                const entryCicilan = {
+                    id: Date.now(),
+                    nominal: nominalCicil,
+                    rincianNominal: rincianCicil || null,
+                    tanggal: tanggalStr,
+                    waktu: waktuStr,
+                    isoWaktu: isoWaktuStr,
+                    txTimestamp: dateObj.getTime(),
+                    catatan: catatanStr
+                };
+
+                // 1. Update dokumen hutang (kurangi sisa hutang & simpan riwayat cicilan beserta tanggal+jam)
+                await updateDoc(doc(db, "transactions", tx.docId), {
+                    nominalAwal: nominalAwal,
+                    nominal: sisaBaru,
+                    isLunas: jadiLunas,
+                    riwayatCicilan: [...riwayatLama, entryCicilan],
+                    syncStatus: false
+                });
+
+                // 2. Buat transaksi Pengeluaran pada tanggal & jam cicilan agar saldo kas & analitik ikut terpotong
+                const ketPengeluaran = jadiLunas
+                    ? `Pelunasan Hutang: ${tx.keterangan}${catatanStr ? ' (' + catatanStr + ')' : ''}`
+                    : `Cicilan Hutang: ${tx.keterangan}${catatanStr ? ' (' + catatanStr + ')' : ''}`;
+
+                const pengeluaranTx = {
+                    id: Date.now() + 1,
+                    tanggal: tanggalStr,
+                    waktu: waktuStr,
+                    bulan: bulanStr,
+                    isoWaktu: isoWaktuStr,
+                    txTimestamp: dateObj.getTime(),
+                    tglAngka: dateObj.getDate(),
+                    blnAngka: dateObj.getMonth(),
+                    thnAngka: dateObj.getFullYear(),
+                    entitas: tx.entitas,
+                    jenis: 'Pengeluaran',
+                    sifat: tx.sifat || 'Produktif',
+                    nominal: nominalCicil,
+                    rincianNominal: rincianCicil || null,
+                    keterangan: ketPengeluaran,
+                    foto: null,
+                    lokasi: null,
+                    syncStatus: false,
+                    isLunas: false,
+                    refHutangDocId: tx.docId,
+                    uid: currentUser ? currentUser.uid : 'public'
+                };
+                await addDoc(collection(db, "transactions"), pengeluaranTx);
+
+                tutupModalCicil();
+            } catch (e) {
+                errEl.innerText = "Gagal menyimpan cicilan.";
+                errEl.classList.remove('hidden');
+            }
+
+            btnSave.innerHTML = 'Simpan Cicilan';
+            btnSave.disabled = false;
+        }
+
+        window.hapusItemCicilan = async function(docId, cicilanIdx) {
+            const tx = dataTransaksi.find(t => t.docId === docId);
+            if (!tx || !Array.isArray(tx.riwayatCicilan)) return;
+            const item = tx.riwayatCicilan[cicilanIdx];
+            if (!item) return;
+
+            if (!confirm(`Hapus catatan cicilan Rp${formatAngkaPlain(item.nominal)} (${item.tanggal} • ${item.waktu})?\nSisa hutang akan dikembalikan.`)) return;
+
+            try {
+                const updatedCicilan = tx.riwayatCicilan.filter((_, idx) => idx !== cicilanIdx);
+                const sisaPulih = (Number(tx.nominal) || 0) + (Number(item.nominal) || 0);
+                await updateDoc(doc(db, "transactions", docId), {
+                    nominal: sisaPulih,
+                    isLunas: false,
+                    riwayatCicilan: updatedCicilan,
+                    syncStatus: false
+                });
+            } catch (e) {
+                alert("Gagal menghapus riwayat cicilan.");
+            }
+        }
+
+        window.tandaiLunas = async function(docId) {
+            const tx = dataTransaksi.find(t => t.docId === docId);
+            if (!tx) return;
+
+            const sisaHutang = Number(tx.nominal) || 0;
+            const riwayatLama = Array.isArray(tx.riwayatCicilan) ? tx.riwayatCicilan : [];
+            const totalTerbayar = riwayatLama.reduce((sum, c) => sum + (Number(c.nominal) || 0), 0);
+            const nominalAwal = Number(tx.nominalAwal !== undefined ? tx.nominalAwal : (sisaHutang + totalTerbayar)) || sisaHutang;
+
+            const pesanKonfirmasi = riwayatLama.length > 0
+                ? `Tandai sisa hutang Rp${formatAngkaPlain(sisaHutang)} ini sebagai Lunas?\n(Memotong saldo sebesar sisa hutang Rp${formatAngkaPlain(sisaHutang)})`
+                : "Tandai hutang ini sebagai Lunas?\n(Memotong saldo sebagai Pengeluaran)";
+
+            if(confirm(pesanKonfirmasi)) {
+                try {
+                    const dateObj = new Date();
+                    const tanggalStr = dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+                    const waktuStr = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                    const isoWaktuStr = getLocalDateTimeString(dateObj);
+
+                    const updatedCicilan = [...riwayatLama];
+                    if (sisaHutang > 0) {
+                        updatedCicilan.push({
+                            id: Date.now(),
+                            nominal: sisaHutang,
+                            rincianNominal: null,
+                            tanggal: tanggalStr,
+                            waktu: waktuStr,
+                            isoWaktu: isoWaktuStr,
+                            txTimestamp: dateObj.getTime(),
+                            catatan: riwayatLama.length > 0 ? "Pelunasan sisa hutang" : "Pelunasan penuh"
+                        });
+                    }
+
+                    await updateDoc(doc(db, "transactions", docId), {
+                        nominalAwal: nominalAwal,
+                        nominal: 0,
+                        isLunas: true,
+                        riwayatCicilan: updatedCicilan,
+                        syncStatus: false
+                    });
+
+                    if (sisaHutang > 0) {
+                        const newTx = {
+                            id: Date.now() + 1, 
+                            tanggal: tanggalStr, 
+                            waktu: waktuStr, 
+                            bulan: dateObj.toLocaleString('id-ID', { month: 'long', year: 'numeric' }),
+                            isoWaktu: isoWaktuStr,
+                            txTimestamp: dateObj.getTime(),
+                            tglAngka: dateObj.getDate(), blnAngka: dateObj.getMonth(), thnAngka: dateObj.getFullYear(),
+                            entitas: tx.entitas, jenis: 'Pengeluaran', sifat: tx.sifat || 'Produktif', 
+                            nominal: sisaHutang, keterangan: "Pelunasan Hutang: " + tx.keterangan,
+                            foto: null, lokasi: null, syncStatus: false, isLunas: false,
+                            refHutangDocId: tx.docId,
+                            uid: currentUser ? currentUser.uid : 'public'
+                        };
+                        await addDoc(collection(db, "transactions"), newTx);
+                    }
+                } catch (e) { alert("Gagal memproses pelunasan."); }
+            }
+        }
+
+        window.gantiBulanKalender = function(delta) {
+            activeCalDate.setMonth(activeCalDate.getMonth() + delta);
+            selectedDayFilter = null;
+            kalkulasiDanRender();
+        }
+
+        window.resetFilterTanggal = function() { selectedDayFilter = null; kalkulasiDanRender(); }
+
+        function kalkulasiDanRender() {
+            // 1. Grand Total Saldo
+            let grandMasuk = 0, grandKeluar = 0, grandHutang = 0;
+            dataTransaksi.filter(t => t.entitas === currentTab).forEach(t => {
+                if(t.jenis === 'Pemasukan') grandMasuk += t.nominal;
+                else if(t.jenis === 'Pengeluaran') grandKeluar += t.nominal;
+                else if(t.jenis === 'Hutang' && !t.isLunas) grandHutang += t.nominal;
+            });
+
+            document.getElementById('total-masuk').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(grandMasuk);
+            document.getElementById('total-keluar').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(grandKeluar);
+            document.getElementById('sisa-saldo').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(grandMasuk - grandKeluar);
+            document.getElementById('total-hutang').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(grandHutang);
+
+            // 2. Filter data khusus bulan kalender aktif
+            const monthName = activeCalDate.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+            document.getElementById('cal-month-title').innerText = monthName;
+            document.getElementById('analytics-month-tag').innerText = monthName;
+
+            const targetYear = activeCalDate.getFullYear();
+            const targetMonth = activeCalDate.getMonth();
+
+            const dataBulanIni = dataTransaksi.filter(t => {
+                if(t.entitas !== currentTab) return false;
+                if(t.thnAngka !== undefined && t.blnAngka !== undefined) {
+                    return t.thnAngka === targetYear && t.blnAngka === targetMonth;
+                }
+                return t.bulan === monthName;
+            });
+
+            // 3. Kalkulasi Analitik Pengeluaran (Produktif, Self-Reward, Beban Produksi, Beli Alat)
+            let totalProduktif = 0;
+            let totalSelfReward = 0;
+            let totalBebanProduksi = 0;
+            let totalBeliAlat = 0;
+            let calMasuk = 0, calKeluar = 0;
+
+            dataBulanIni.forEach(t => {
+                if(t.jenis === 'Pemasukan') calMasuk += t.nominal;
+                else if(t.jenis === 'Pengeluaran') {
+                    calKeluar += t.nominal;
+                    if (t.sifat === 'Self-Reward') totalSelfReward += t.nominal;
+                    else if (t.sifat === 'Beban Produksi') totalBebanProduksi += t.nominal;
+                    else if (t.sifat === 'Beli Alat') totalBeliAlat += t.nominal;
+                    else totalProduktif += t.nominal;
+                }
+            });
+
+            const totalKeluarBulanIni = totalProduktif + totalSelfReward + totalBebanProduksi + totalBeliAlat;
+            let pctProd = 0, pctSelf = 0, pctBeban = 0, pctAlat = 0;
+            if (totalKeluarBulanIni > 0) {
+                pctProd = Math.round((totalProduktif / totalKeluarBulanIni) * 100);
+                pctSelf = Math.round((totalSelfReward / totalKeluarBulanIni) * 100);
+                pctBeban = Math.round((totalBebanProduksi / totalKeluarBulanIni) * 100);
+                pctAlat = Math.max(0, 100 - pctProd - pctSelf - pctBeban);
+            }
+
+            document.getElementById('pct-produktif').innerText = pctProd + "%";
+            document.getElementById('pct-selfreward').innerText = pctSelf + "%";
+            document.getElementById('pct-bebanproduksi').innerText = pctBeban + "%";
+            document.getElementById('pct-belialat').innerText = pctAlat + "%";
+
+            document.getElementById('bar-produktif').style.width = (totalKeluarBulanIni > 0 ? pctProd : 50) + "%";
+            document.getElementById('bar-selfreward').style.width = (totalKeluarBulanIni > 0 ? pctSelf : 50) + "%";
+            document.getElementById('bar-bebanproduksi').style.width = (totalKeluarBulanIni > 0 ? pctBeban : 0) + "%";
+            document.getElementById('bar-belialat').style.width = (totalKeluarBulanIni > 0 ? pctAlat : 0) + "%";
+
+            document.getElementById('val-produktif').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(totalProduktif);
+            document.getElementById('val-selfreward').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(totalSelfReward);
+            document.getElementById('val-bebanproduksi').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(totalBebanProduksi);
+            document.getElementById('val-belialat').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(totalBeliAlat);
+
+            // 4. Rekap Bulanan Kalender
+            document.getElementById('cal-rekap-masuk').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(calMasuk);
+            document.getElementById('cal-rekap-keluar').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(calKeluar);
+            const labaBulan = calMasuk - calKeluar;
+            document.getElementById('cal-rekap-laba').innerText = isPrivacyMode ? "Rp ••••••••" : 'Rp' + formatRupiah(labaBulan);
+
+            // 5. Render Grid Kalender 1x1
+            const tilesContainer = document.getElementById('calendar-tiles');
+            tilesContainer.innerHTML = '';
+            const firstDayIndex = new Date(targetYear, targetMonth, 1).getDay();
+            const totalDaysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+
+            for(let i = 0; i < firstDayIndex; i++) {
+                tilesContainer.innerHTML += `<div class="day-tile opacity-0 pointer-events-none"></div>`;
+            }
+
+            const txCountPerDay = {};
+            dataBulanIni.forEach(t => {
+                const dayNum = t.tglAngka || parseInt(t.tanggal);
+                if(dayNum) txCountPerDay[dayNum] = (txCountPerDay[dayNum] || 0) + 1;
+            });
+
+            const today = new Date();
+            const isCurrentMonthNow = (today.getFullYear() === targetYear && today.getMonth() === targetMonth);
+
+            for(let day = 1; day <= totalDaysInMonth; day++) {
+                const hasTx = txCountPerDay[day];
+                const isSelected = selectedDayFilter === day;
+                const isToday = isCurrentMonthNow && today.getDate() === day;
+
+                let tileClass = "bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-emerald-100";
+                if(isSelected) tileClass = "bg-emerald-600 text-white font-black shadow-md ring-2 ring-emerald-400";
+                else if(isToday) tileClass = "border-2 border-emerald-500 text-emerald-600 dark:text-emerald-300 font-bold";
+
+                const dotBadge = hasTx ? `<span class="w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-500'} absolute bottom-1"></span>` : '';
+
+                tilesContainer.innerHTML += `
+                    <div onclick="pilihTanggal(${day})" class="day-tile ${tileClass}">
+                        <span>${day}</span>
+                        ${dotBadge}
+                    </div>
+                `;
+            }
+
+            // 6. Render Detail List Transaksi (OTOMATIS URUT KRONOLOGIS TANGGAL & JAM KEJADIAN)
+            const listDetail = document.getElementById('history-list-detail');
+            listDetail.innerHTML = '';
+
+            let dataFiltered = dataBulanIni;
+            if(selectedDayFilter !== null) {
+                document.getElementById('selected-date-label').innerText = `Transaksi Tanggal ${selectedDayFilter} ${monthName}`;
+                document.getElementById('btn-reset-filter').classList.remove('hidden');
+                dataFiltered = dataBulanIni.filter(t => (t.tglAngka || parseInt(t.tanggal)) === selectedDayFilter);
+            } else {
+                document.getElementById('selected-date-label').innerText = `Semua Transaksi (${monthName})`;
+                document.getElementById('btn-reset-filter').classList.add('hidden');
+            }
+
+            dataFiltered = [...dataFiltered].sort((a, b) => {
+                const diff = getEventTimestamp(b) - getEventTimestamp(a);
+                if (diff !== 0) return diff;
+                return (Number(b.id) || 0) - (Number(a.id) || 0);
+            });
+
+            if(dataFiltered.length === 0) {
+                listDetail.innerHTML = `<p class="text-xs text-center py-4 font-semibold text-slate-400">Tidak ada transaksi pada periode ini.</p>`;
+                return;
+            }
+
+            dataFiltered.forEach(t => {
+                let iconColor, iconPath, nominalColor, prefix;
+                if(t.jenis === 'Pemasukan') {
+                    iconColor = 'text-emerald-500 bg-emerald-100 dark:bg-emerald-950/40'; iconPath = 'fa-arrow-down'; nominalColor = 'text-emerald-600 dark:text-emerald-400'; prefix = '+';
+                } else if(t.jenis === 'Pengeluaran') {
+                    iconColor = 'text-rose-500 bg-rose-100 dark:bg-rose-950/40'; iconPath = 'fa-arrow-up'; nominalColor = 'text-slate-900 dark:text-slate-100'; prefix = '-';
+                } else { 
+                    iconColor = 'text-amber-500 bg-amber-100 dark:bg-amber-950/40'; iconPath = 'fa-hand-holding-dollar'; 
+                    nominalColor = t.isLunas ? 'text-slate-400 line-through' : 'text-amber-600 dark:text-amber-400'; prefix = '';
+                }
+
+                const fotoHtml = t.foto ? `<img src="${t.foto}" class="mt-2 w-14 h-14 object-cover rounded-lg border border-slate-200 shadow-sm cursor-pointer hover:scale-150 origin-left transition-transform">` : '';
+                const locHtml = t.lokasi ? `<a href="${t.lokasi}" target="_blank" class="text-emerald-500 ml-1.5 hover:underline"><i class="fa-solid fa-map-pin"></i></a>` : '';
+                
+                // Rincian hasil kalkulator (jika nominal berasal dari operasi hitung)
+                const rincianText = isPrivacyMode ? '•••• + ••••' : t.rincianNominal;
+                const rincianHtml = t.rincianNominal
+                    ? `<p class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5"><i class="fa-solid fa-calculator mr-1 text-[9px]"></i>Rincian: ${rincianText}</p>`
+                    : '';
+
+                // Info cicilan & progres hutang
+                const riwayatCicilan = (t.jenis === 'Hutang' && Array.isArray(t.riwayatCicilan)) ? t.riwayatCicilan : [];
+                const totalTerbayar = riwayatCicilan.reduce((sum, c) => sum + (Number(c.nominal) || 0), 0);
+                const sisaHutang = Number(t.nominal) || 0;
+                const nominalAwalHutang = Number(t.nominalAwal !== undefined ? t.nominalAwal : (sisaHutang + totalTerbayar)) || sisaHutang;
+
+                let cicilanSectionHtml = '';
+                if (t.jenis === 'Hutang' && riwayatCicilan.length > 0) {
+                    const pctBayar = nominalAwalHutang > 0 ? Math.min(100, Math.round((totalTerbayar / nominalAwalHutang) * 100)) : 100;
+                    const itemsHtml = riwayatCicilan.map((c, idx) => {
+                        const nomStr = isPrivacyMode ? 'Rp ••••••' : `Rp${formatRupiah(c.nominal)}`;
+                        const catStr = c.catatan ? ` • ${c.catatan}` : '';
+                        const delCicilBtn = !t.isLunas
+                            ? `<button onclick="hapusItemCicilan('${t.docId}', ${idx})" title="Hapus cicilan ini" class="text-rose-400 hover:text-rose-600 ml-1"><i class="fa-solid fa-xmark text-[9px]"></i></button>`
+                            : '';
+                        return `<div class="flex justify-between items-center text-[10px] text-slate-600 dark:text-slate-300 py-0.5 border-b border-slate-200/60 dark:border-slate-700/60 last:border-0">
+                            <span class="truncate pr-2"><i class="fa-solid fa-check text-emerald-500 mr-1 text-[9px]"></i>${c.tanggal} • ${c.waktu}${catStr}</span>
+                            <span class="font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">${nomStr}${delCicilBtn}</span>
+                        </div>`;
+                    }).join('');
+
+                    cicilanSectionHtml = `
+                        <div class="mt-2 bg-slate-50 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-700/80 rounded-xl p-2 space-y-1.5">
+                            <div class="flex justify-between items-center text-[10px] font-bold">
+                                <span class="text-slate-500 dark:text-slate-400">Progres Cicilan (${pctBayar}%)</span>
+                                <span class="text-amber-600 dark:text-amber-400">Sisa: ${isPrivacyMode ? 'Rp ••••••' : 'Rp' + formatRupiah(sisaHutang)} / ${isPrivacyMode ? 'Rp ••••••' : 'Rp' + formatRupiah(nominalAwalHutang)}</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div class="bg-emerald-500 h-full rounded-full transition-all" style="width: ${pctBayar}%"></div>
+                            </div>
+                            <div class="pt-0.5">${itemsHtml}</div>
+                        </div>
+                    `;
+                }
+
+                let cicilBtn = (t.jenis === 'Hutang' && !t.isLunas)
+                    ? `<button onclick="bukaModalCicil('${t.docId}')" class="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded font-bold hover:bg-emerald-700"><i class="fa-solid fa-coins mr-1"></i>Cicil</button>`
+                    : '';
+                let lunasBtn = (t.jenis === 'Hutang' && !t.isLunas) ? `<button onclick="tandaiLunas('${t.docId}')" class="text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded font-bold hover:bg-amber-600">LUNAS</button>` : '';
+                if(t.isLunas) lunasBtn = `<span class="text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-500 px-2 py-0.5 rounded font-bold">LUNAS</span>`;
+
+                let sifatBadge = '';
+                if(t.sifat === 'Produktif') sifatBadge = `<span class="text-[9px] bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 ml-1.5 font-bold">💡 Produktif</span>`;
+                if(t.sifat === 'Self-Reward') sifatBadge = `<span class="text-[9px] bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/60 dark:text-fuchsia-300 px-1.5 py-0.5 rounded border border-fuchsia-200 dark:border-fuchsia-800 ml-1.5 font-bold">🎉 Self-Reward</span>`;
+                if(t.sifat === 'Beban Produksi') sifatBadge = `<span class="text-[9px] bg-sky-50 text-sky-600 dark:bg-sky-950/60 dark:text-sky-300 px-1.5 py-0.5 rounded border border-sky-200 dark:border-sky-800 ml-1.5 font-bold">🎬 Beban Produksi</span>`;
+                if(t.sifat === 'Beli Alat') sifatBadge = `<span class="text-[9px] bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-300 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800 ml-1.5 font-bold">📷 Beli Alat</span>`;
+
+                // Tampilan nominal di kanan kartu (untuk hutang yang sudah lunas tampilkan nominal awal yang dicoret)
+                const nominalTampil = (t.jenis === 'Hutang' && t.isLunas) ? nominalAwalHutang : t.nominal;
+                const subNominalHutangHtml = (t.jenis === 'Hutang' && !t.isLunas && nominalAwalHutang > sisaHutang)
+                    ? `<p class="text-[9px] font-semibold text-slate-400">dari ${isPrivacyMode ? 'Rp ••••••' : formatRupiah(nominalAwalHutang)}</p>`
+                    : '';
+
+                listDetail.innerHTML += `
+                    <div class="glass-card p-3 flex gap-3 items-start fade-in">
+                        <div class="p-2 rounded-full flex-shrink-0 ${iconColor} mt-0.5"><i class="fa-solid ${iconPath} text-xs"></i></div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-xs text-slate-900 dark:text-slate-100 truncate flex items-center">${t.keterangan} ${sifatBadge}</p>
+                            ${rincianHtml}
+                            <p class="text-[10px] text-slate-500 font-medium mt-0.5">${t.tanggal} • ${t.waktu} ${locHtml}</p>
+                            ${fotoHtml}
+                            ${cicilanSectionHtml}
+                            <div class="flex flex-wrap gap-1.5 mt-2">
+                                ${cicilBtn}
+                                ${lunasBtn}
+                                <button onclick="editTx('${t.docId}')" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded font-semibold"><i class="fa-solid fa-pen"></i> Edit</button>
+                                <button onclick="hapusTx('${t.docId}')" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-rose-500 px-2 py-0.5 rounded font-semibold"><i class="fa-solid fa-trash"></i> Hapus</button>
+                            </div>
+                        </div>
+                        <div class="text-right whitespace-nowrap pt-0.5">
+                            <div class="font-extrabold text-xs ${nominalColor}">${prefix}${formatRupiah(nominalTampil)}</div>
+                            ${subNominalHutangHtml}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        window.pilihTanggal = function(day) {
+            if(selectedDayFilter === day) selectedDayFilter = null;
+            else selectedDayFilter = day;
+            kalkulasiDanRender();
+        }
+
+        function getGasUrl() {
+            const saved = localStorage.getItem('mulaeGasUrl');
+            if (saved && saved.startsWith('http')) return saved;
+            return GOOGLE_APP_SCRIPT_URL;
+        }
+
+        window.aturUrlSheets = function() {
+            const currentUrl = localStorage.getItem('mulaeGasUrl') || '';
+            const baru = prompt("Tempelkan URL Web App Google Apps Script dari spreadsheet KAS KEUANGAN:", currentUrl);
+            if (baru !== null && baru.trim() !== "") {
+                localStorage.setItem('mulaeGasUrl', baru.trim());
+                alert("URL Google Sheets KAS KEUANGAN berhasil disimpan!");
+            }
+        }
+
+        window.syncToSheets = async function(forceAll = false) {
+            const targetList = forceAll ? dataTransaksi : dataTransaksi.filter(t => !t.syncStatus);
+            if (targetList.length === 0) return alert("Semua data sudah tersinkronisasi ke Google Sheets.");
+            
+            const scriptUrl = getGasUrl();
+            if (!scriptUrl || scriptUrl === "URL_APPS_SCRIPT_ANDA_DISINI") {
+                aturUrlSheets();
+                return;
+            }
+
+            const status = document.getElementById('sync-status');
+            status.classList.remove('hidden');
+            status.className = "text-xs mt-1.5 font-semibold text-emerald-600 block";
+            status.innerText = "Mengirim " + targetList.length + " data ke KAS KEUANGAN...";
+
+            try {
+                const safePayload = targetList.map(t => {
+                    const cicilanList = Array.isArray(t.riwayatCicilan) ? t.riwayatCicilan : [];
+                    const cicilanRingkas = cicilanList.length > 0
+                        ? cicilanList.map(c => `${c.tanggal} ${c.waktu}: Rp${formatAngkaPlain(c.nominal)}`).join('; ')
+                        : '-';
+                    return {
+                        tanggal: t.tanggal,
+                        waktu: t.waktu,
+                        bulan: t.bulan,
+                        isoWaktu: t.isoWaktu || "",
+                        txTimestamp: getEventTimestamp(t),
+                        entitas: t.entitas === 'Bisnis' ? 'Mulae.Production' : 'Pribadi',
+                        jenis: t.jenis,
+                        sifat: t.sifat || '-',
+                        nominal: Number(t.nominal) || 0,
+                        nominalAwal: Number(t.nominalAwal || t.nominal) || 0,
+                        rincian: t.rincianNominal || '-',
+                        keterangan: t.keterangan || '-',
+                        foto: t.foto ? "Ada Lampiran" : "Tidak Ada",
+                        lokasi: t.lokasi || "Tidak Ada Lokasi",
+                        statusHutang: t.jenis === 'Hutang' ? (t.isLunas ? 'Lunas' : 'Belum Lunas') : '-',
+                        riwayatCicilan: cicilanRingkas
+                    };
+                });
+
+                await fetch(scriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        mode: forceAll ? 'replace' : 'append',
+                        transactions: safePayload
+                    })
+                });
+                
+                for (let t of targetList) {
+                    if (!t.syncStatus) {
+                        await updateDoc(doc(db, "transactions", t.docId), { syncStatus: true });
+                    }
+                }
+                status.className = "text-xs mt-1.5 font-semibold text-emerald-600 block";
+                status.innerText = "Selesai menyinkronkan ke KAS KEUANGAN!";
+                setTimeout(() => status.classList.add('hidden'), 3000);
+            } catch (error) {
+                status.className = "text-xs mt-1.5 font-semibold text-rose-600 block";
+                status.innerText = "Error koneksi internet.";
+            }
+        }
+
+        const savedTheme = localStorage.getItem('mulaeTheme');
+        if (savedTheme) {
+            applyTheme(savedTheme);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            applyTheme('dark');
+        } else {
+            applyTheme('light');
+        }
+
+        setWaktuSekarang();
+        setJenis('Pengeluaran');
+        switchTab('Pribadi');
+        if(isPrivacyMode) {
+            document.getElementById('privacy-icon').className = "fa-solid fa-eye-slash text-sm text-emerald-600";
+        }
+    </script>
+</body>
+</html>
